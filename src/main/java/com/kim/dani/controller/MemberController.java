@@ -5,6 +5,7 @@ import com.kim.dani.dtoGet.MemberLoginGetDto;
 import com.kim.dani.dtoGet.MemberSigninGetDto;
 import com.kim.dani.dtoSet.AuthSetDto;
 import com.kim.dani.dtoSet.MemberLoginSetDto;
+import com.kim.dani.dtoSet.MyPageSetDto;
 import com.kim.dani.entity.Auth;
 import com.kim.dani.entity.Member;
 import com.kim.dani.service.MemberService;
@@ -18,11 +19,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -68,9 +71,10 @@ public class MemberController {
     }
 
 
-    //권한체크 후 MANAGER 은 관리자탭 생성
+    //권한체크
+    @PreAuthorize("authenticated()")
     @ApiResponse(responseCode = "200", description = "success",content = @Content(schema = @Schema(implementation = AuthSetDto.class)))
-    @Operation(summary = "권한",description = "사용자 권한 체크 후 관리자탭생성")
+    @Operation(summary = "권한",description = "사용자 권한 체크")
     @GetMapping("/auth")
     public ResponseEntity auth(@Parameter HttpServletRequest req) {
 
@@ -82,7 +86,22 @@ public class MemberController {
     }
 
 
-//    @ApiResponse(responseCode = )
+    //CUSTOMER = 추가한 상품 목록
+    // MANAGER = 업로드한 상품 목록 , 수정 , 상품업로드
+    @ApiResponse(responseCode = "200",description = "장바구니",content = @Content(schema = @Schema(implementation = MyPageSetDto.class)))
+    @Operation(summary = "상품 리스트", description = "회원-장바구니 / 메니져-상품목록,수정,업로드")
+    @PreAuthorize("authenticated()")
+    @PostMapping("/mypage/{memberId}")
+    public ResponseEntity myPage (@PathVariable Long memberId,HttpServletRequest req) {
+        List<MyPageSetDto> myPageSetDtos = memberService.myPage(memberId, req);
+                if(myPageSetDtos!=null){
+                    return new ResponseEntity(myPageSetDtos, HttpStatus.OK);
+                }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+
+
 
 //    private final TestTeamRepository teamRepository;
 //    private final TestMemberRepository memberRepository;

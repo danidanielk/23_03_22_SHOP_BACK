@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
@@ -62,4 +63,17 @@ public class ProductController {
         }
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
+
+    //상품 Mypage에 추가 버튼
+    @ApiResponse(responseCode = "200",description = "MyPage에 상품 추가")
+    @Operation(summary = "상품 추가",description = "상품 추가")
+    @GetMapping("product/add/{productId}")
+    public ResponseEntity productAdd(@PathVariable Long productId, HttpServletRequest req){
+
+        productService.productAdd(productId, req);
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
+
+
 }

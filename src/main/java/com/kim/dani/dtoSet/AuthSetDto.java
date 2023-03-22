@@ -12,6 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AuthSetDto {
 
+    @Schema(description = "멤버 ID")
+    private Long memberId;
+
     @Schema(description = "Auth enum. MANAGER / CUSTOMER")
     private Auth auth;
 

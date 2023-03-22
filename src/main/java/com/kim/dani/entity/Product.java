@@ -4,11 +4,13 @@ package com.kim.dani.entity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Product {
@@ -35,4 +37,8 @@ public class Product {
     @JoinColumn(name = "member_id")
     @ManyToOne
     private Member member;
+
+    @JoinColumn(name = "cart_id")
+    @ManyToOne
+    private Cart cart;
 }

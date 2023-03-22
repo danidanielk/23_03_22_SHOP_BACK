@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 
@@ -39,9 +40,9 @@ public class ManagerController {
     @PostMapping("/upload")
     public ResponseEntity productUpload(@Valid
                                         @RequestPart("formData") ProductUploadGetDto productUploadGetDto,
-                                        @RequestPart("productImage") MultipartFile file) throws IOException {
+                                        @RequestPart("productImage") MultipartFile file, HttpServletRequest req) throws IOException {
 
-        ProductUploadSetDto setDto = managerService.productUpload(productUploadGetDto,file);
+        ProductUploadSetDto setDto = managerService.productUpload(productUploadGetDto,file,req);
         if (setDto !=null){
             return new ResponseEntity(setDto, HttpStatus.OK);
         }

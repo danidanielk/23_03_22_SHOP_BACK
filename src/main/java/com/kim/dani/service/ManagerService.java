@@ -4,9 +4,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
-import com.kim.dani.entity.Category;
-import com.kim.dani.entity.Product;
-import com.kim.dani.entity.QProduct;
+import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
 import com.kim.dani.repository.CategoryRepository;
 import com.kim.dani.repository.ProductRepository;
@@ -16,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -37,6 +36,7 @@ public class ManagerService {
     private final ProductRepository productRepository;
     private final JPAQueryFactory queryFactory;
     private final QProduct qProduct = QProduct.product;
+    private final QMember qMember = QMember.member;
     private final JwtTokenV2 jwtTokenV2;
 
 
@@ -61,7 +61,13 @@ public class ManagerService {
 
 
     //상품 업로드.
-    public ProductUploadSetDto productUpload(ProductUploadGetDto productUploadGetDto, MultipartFile file) throws IOException {
+    public ProductUploadSetDto productUpload(ProductUploadGetDto productUploadGetDto, MultipartFile file, HttpServletRequest req) throws IOException {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        Member member = queryFactory
+                .selectFrom(qMember)
+                .where(qMember.Email.eq(getEmail))
+                .fetchOne();
 
         String path = photoS3Upload(file);
 
@@ -74,7 +80,7 @@ public class ManagerService {
                 productUploadGetDto.getProductPrice(),
                 productUploadGetDto.getProductContent(),
                 productUploadGetDto.getProductQuentity(),
-                category);
+                category,member ,null);
         productRepository.save(product);
 
 
