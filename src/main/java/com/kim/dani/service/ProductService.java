@@ -97,9 +97,7 @@ public class ProductService {
         memberRepository.save(member);
         product.setMember(member);
         productRepository.save(product);
-        Cart cart = new Cart();
-        cart.setProducts();
-        cartRepository.save()
+
 
     }
 
