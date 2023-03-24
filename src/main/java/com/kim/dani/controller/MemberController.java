@@ -71,7 +71,7 @@ public class MemberController {
     }
 
 
-    //권한체크
+    //권한체크 Mypage에 MANAGER Page || CUSTOMER Page 생성
     @PreAuthorize("authenticated()")
     @ApiResponse(responseCode = "200", description = "success",content = @Content(schema = @Schema(implementation = AuthSetDto.class)))
     @Operation(summary = "권한",description = "사용자 권한 체크")

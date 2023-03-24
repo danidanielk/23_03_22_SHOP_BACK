@@ -1,6 +1,7 @@
 package com.kim.dani.test.testEntity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,11 +25,11 @@ public class TestProduct {
 
     private String productName;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "testProduct" , cascade = CascadeType.ALL ,orphanRemoval = true)
     private List<TestCartAndProduct> TestCartAndProducts = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "testMember")
     private TestMember testMember;
-
 }

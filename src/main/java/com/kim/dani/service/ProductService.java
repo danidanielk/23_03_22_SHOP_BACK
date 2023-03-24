@@ -8,10 +8,7 @@ import com.kim.dani.dtoSet.ProductListSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
-import com.kim.dani.repository.CartRepository;
-import com.kim.dani.repository.CategoryRepository;
-import com.kim.dani.repository.MemberRepository;
-import com.kim.dani.repository.ProductRepository;
+import com.kim.dani.repository.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,18 +30,21 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+    private final CartRepository cartRepository;
+    private final CartAndProductRepository cartAndProductRepository;
     private final JPAQueryFactory queryFactory;
     private final QProduct qProduct = QProduct.product;
     private final QMember qMember = QMember.member;
+    private final QCart qCart = QCart.cart;
+    private final QCartAndProduct qCartAndProduct = QCartAndProduct.cartAndProduct;
     private final JwtTokenV2 jwtTokenV2;
-    private final CartRepository cartRepository;
 
 
 
 
 
 
-    //상품 리스트
+    //카테고리에 맞는 상품 리스트
     public List<ProductListSetDto> productList(String category){
 
         List<ProductListSetDto> setDtoList = new ArrayList<>();
@@ -92,12 +92,19 @@ public class ProductService {
                 .where(qMember.Email.eq(MemberEmail))
                 .fetchOne();
 
+        Cart cart = queryFactory
+                .selectFrom(qCart)
+                .where(qCart.member.eq(member))
+                .fetchOne();
 
-
-        memberRepository.save(member);
-        product.setMember(member);
-        productRepository.save(product);
-
+        if (cart == null){
+            Cart cart1 = new Cart(null, member, null);
+            cartRepository.save(cart1);
+            CartAndProduct cartAndProduct = new CartAndProduct(null, cart1, product);
+            cartAndProductRepository.save(cartAndProduct);
+        }
+        CartAndProduct cartAndProduct = new CartAndProduct(null, cart, product);
+        cartAndProductRepository.save(cartAndProduct);
 
     }
 

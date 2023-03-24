@@ -73,7 +73,7 @@ public class ManagerService {
 
         Category category = new Category();
         category.setProductCategory(productUploadGetDto.getProductCategory());
-        categoryRepository.save(category);
+
 
         Product product = new Product(null,productUploadGetDto.getProductName(),
                 path,

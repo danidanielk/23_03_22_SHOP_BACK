@@ -42,7 +42,7 @@ public class TestControlloer {
     }
 
 
-    // 매니저가 첫번째 상품등록 + 자신의 카트에 추가
+    // 매니저가 첫번째 상품등록
     @GetMapping("test2")
     private void test2() {
 
@@ -122,12 +122,13 @@ public class TestControlloer {
                 .fetchOne();
 
 
-        //........................................................................
         List<TestProduct> testProducts = jpaQueryFactory
-                .selectFrom(qTestProduct)
-                .join(qTestCartAndProduct).on(qTestProduct.eq(qTestCartAndProduct.testProduct))
-                .join(qTestCart).on(qTestCartAndProduct.testCart.eq(qTestCart))
-                .where(qTestCart.testMember.eq(testMember))
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
                 .fetch();
 
 
@@ -139,26 +140,36 @@ public class TestControlloer {
 
     //daniel 이 카트에 등록했던 상품 또다시 추가.
     @GetMapping("test8")
-    public void test8 (){
+    public ResponseEntity test8 (){
 
         TestMember testMember = jpaQueryFactory
                 .selectFrom(qTestMember)
                 .where(qTestMember.testMemberName.eq("daniel"))
                 .fetchOne();
 
-        TestCart testCart = new TestCart(null, null, testMember);
-
-        testCartRepository.save(testCart);
-
         TestProduct testProduct = jpaQueryFactory
                 .selectFrom(qTestProduct)
                 .where(qTestProduct.productName.eq("first"))
                 .fetchOne();
 
+        List<TestProduct> testProduct1 = jpaQueryFactory
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
+                .fetch();
+        for (TestProduct product : testProduct1) {
+            if(product.getProductName().equals(testProduct.getProductName())){
+                return new ResponseEntity("The product already exists.", HttpStatus.BAD_REQUEST);
+            }
+        }
+        TestCart testCart = new TestCart(null, null, testMember);
+        testCartRepository.save(testCart);
         TestCartAndProduct testCartAndProduct = new TestCartAndProduct(null, testCart, testProduct);
         testCartAndProductRepository.save(testCartAndProduct);
-
-
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     //다시조회해보기
@@ -170,18 +181,18 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel"))
                 .fetchOne();
 
-        List<TestCart> testCart = jpaQueryFactory
-                .selectFrom(qTestCart)
-                .where(qTestCart.testMember.eq(testMember))
+        List<TestProduct> testProducts = jpaQueryFactory
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
                 .fetch();
 
-        return new ResponseEntity(testCart, HttpStatus.OK);
+        return new ResponseEntity(testProducts, HttpStatus.OK);
 
-//        List<TestCart> testCarts = jpaQueryFactory
-//                .selectFrom(qTestCart)
-//                .where(qTestCart.testMember.testMemberName.eq("daniel"))
-//                .fetch();
-//        return new ResponseEntity(testCarts, HttpStatus.OK);
+
 
     }
 
@@ -194,16 +205,25 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel"))
                 .fetchOne();
 
-        TestCart testCart = new TestCart(null, null, testMember);
-
-        testCartRepository.save(testCart);
+        TestCart getTestCart = jpaQueryFactory
+                .selectFrom(qTestCart)
+                .where(qTestCart.testMember.eq(testMember))
+                .fetchOne();
 
         TestProduct testProduct = jpaQueryFactory
                 .selectFrom(qTestProduct)
                 .where(qTestProduct.productName.eq("second"))
                 .fetchOne();
 
+        if(getTestCart == null){
+        TestCart testCart = new TestCart(null, null, testMember);
+        testCartRepository.save(testCart);
         TestCartAndProduct testCartAndProduct = new TestCartAndProduct(null, testCart, testProduct);
+            testCartAndProductRepository.save(testCartAndProduct);
+        }
+
+        TestCartAndProduct testCartAndProduct = new TestCartAndProduct(null, getTestCart, testProduct);
+        testCartAndProductRepository.save(testCartAndProduct);
     }
 
     //daniel 의 cart 조회하기 상품이 2개인지 확인.
@@ -215,18 +235,18 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel"))
                 .fetchOne();
 
-        List<TestCart> cart = jpaQueryFactory
-                .selectFrom(qTestCart)
-                .where(qTestCart.testMember.eq(testMember))
+        List<TestProduct> testProducts = jpaQueryFactory
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
                 .fetch();
 
-        return new ResponseEntity(cart, HttpStatus.OK);
+        return new ResponseEntity(testProducts, HttpStatus.OK);
 
-//        List<TestCart> carts = jpaQueryFactory
-//                .selectFrom(qTestCart)
-//                .where(qTestCart.testMember.testMemberName.eq("daniel"))
-//                .fetch();
-//        return new ResponseEntity(carts, HttpStatus.OK);
+
     }
 
 
@@ -244,7 +264,7 @@ public class TestControlloer {
 
         TestProduct testProduct = jpaQueryFactory
                 .selectFrom(qTestProduct)
-                .where(qTestProduct.productName.eq("filst"))
+                .where(qTestProduct.productName.eq("first"))
                 .fetchOne();
 
 
@@ -261,12 +281,16 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel2"))
                 .fetchOne();
 
-        List<TestCart> cart = jpaQueryFactory
-                .selectFrom(qTestCart)
-                .where(qTestCart.testMember.eq(testMember))
+        List<TestProduct> testProducts = jpaQueryFactory
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
                 .fetch();
 
-        return new ResponseEntity(cart, HttpStatus.OK);
+        return new ResponseEntity(testProducts, HttpStatus.OK);
     }
 
     //daniel 의 cart 에 first 상품과 second 상품이 그대로 등록되어있는지 조회해보기
@@ -277,12 +301,16 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel"))
                 .fetchOne();
 
-        List<TestCart> testCarts = jpaQueryFactory
-                .selectFrom(qTestCart)
-                .where(qTestCart.testMember.eq(testMember))
+        List<TestProduct> testProducts = jpaQueryFactory
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
                 .fetch();
 
-        return new ResponseEntity(testCarts, HttpStatus.OK);
+        return new ResponseEntity(testProducts, HttpStatus.OK);
     }
 
     //daniel2에게 second 상품 등록
@@ -294,16 +322,24 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel2"))
                 .fetchOne();
 
-        TestCart testCart = new TestCart(null, null, testMember);
-
-        testCartRepository.save(testCart);
+        TestCart getTestCart = jpaQueryFactory
+                .selectFrom(qTestCart)
+                .where(qTestCart.testMember.eq(testMember))
+                .fetchOne();
 
         TestProduct testProduct = jpaQueryFactory
                 .selectFrom(qTestProduct)
                 .where(qTestProduct.productName.eq("second"))
                 .fetchOne();
 
+        if (getTestCart == null) {
+        TestCart testCart = new TestCart(null, null, testMember);
+        testCartRepository.save(testCart);
         TestCartAndProduct testCartAndProduct = new TestCartAndProduct(null, testCart, testProduct);
+        testCartAndProductRepository.save(testCartAndProduct);
+        }
+
+        TestCartAndProduct testCartAndProduct = new TestCartAndProduct(null, getTestCart, testProduct);
         testCartAndProductRepository.save(testCartAndProduct);
     }
 
@@ -316,12 +352,16 @@ public class TestControlloer {
                 .where(qTestMember.testMemberName.eq("daniel2"))
                 .fetchOne();
 
-        List<TestCart> testCarts = jpaQueryFactory
-                .selectFrom(qTestCart)
-                .where(qTestCart.testMember.eq(testMember))
+        List<TestProduct> testProducts = jpaQueryFactory
+                .select(qTestProduct)
+                .from(qTestMember)
+                .leftJoin(qTestMember.testCart, qTestCart)
+                .leftJoin(qTestCart.testCartAndProducts, qTestCartAndProduct)
+                .leftJoin(qTestCartAndProduct.testProduct, qTestProduct)
+                .where(qTestMember.eq(testMember))
                 .fetch();
 
-        return new ResponseEntity(testCarts, HttpStatus.OK);
+        return new ResponseEntity(testProducts, HttpStatus.OK);
 
     }
 
@@ -342,11 +382,7 @@ public class TestControlloer {
 
         return new ResponseEntity(testProducts, HttpStatus.OK);
 
-//        List<TestCart> testCarts = jpaQueryFactory
-//                .selectFrom(qTestCart)
-//                .where(qTestCart.testMember.testMemberName.eq("MAMAGER"))
-//                .fetch();
-//        return new ResponseEntity(testCarts, HttpStatus.OK);
+
     }
 
 

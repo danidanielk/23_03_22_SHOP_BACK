@@ -27,6 +27,8 @@ public class MemberService {
     private final JPAQueryFactory queryFactory;
     private final MemberRepository memberRepository;
     private final QMember qmember = QMember.member;
+    private final QCart qCart = QCart.cart;
+    private final QCartAndProduct qCartAndProduct = QCartAndProduct.cartAndProduct;
     private final QProduct qProduct = QProduct.product;
     private final JwtTokenV2 jwtTokenV2;
 
@@ -95,7 +97,7 @@ public class MemberService {
     }
 
 
-    //Mypage 리스트
+    //Mypage 리스트 Manager은 전체상품 꺼내주고 Customer은 카트조회해서 꺼내주기
     public List<MyPageSetDto> myPage(Long memberId,HttpServletRequest req) {
 
         Member member1 = queryFactory
@@ -103,14 +105,36 @@ public class MemberService {
                 .where(qmember.id.eq(memberId))
                 .fetchOne();
 
-        List<MyPageSetDto> myPageSetDtos = new ArrayList<>();
-        List<Product> products = member1.getProducts();
-        for (Product product : products) {
-            MyPageSetDto setDto = new MyPageSetDto(product.getId(), memberId, product.getProductName(),
-                    product.getProductImage(), product.getProductPrice(), product.getProductContent(),
-                    product.getProductQuantity(), product.getCategory().getProductCategory());
+            List<MyPageSetDto> myPageSetDtos = new ArrayList<>();
+        if (member1.getAuth().equals(Auth.CUSTOMER)) {
+            List<Product> products = queryFactory
+                    .select(qProduct)
+                    .from(qmember)
+                    .leftJoin(qmember.cart, qCart)
+                    .leftJoin(qCart.cartAndProduct, qCartAndProduct)
+                    .leftJoin(qCartAndProduct.product, qProduct)
+                    .where(qmember.eq(member1))
+                    .fetch();
+
+            for (Product product : products) {
+                MyPageSetDto setDto = new MyPageSetDto(product.getId(), memberId, product.getProductName(),
+                        product.getProductImage(), product.getProductPrice(), product.getProductContent(),
+                        product.getProductQuantity(), product.getCategory().getProductCategory());
+                myPageSetDtos.add(setDto);
+            }
+            return myPageSetDtos;
+        }
+        List<Product> managerProducts = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.member.eq(member1))
+                .fetch();
+        for (Product managerProduct : managerProducts) {
+            MyPageSetDto setDto = new MyPageSetDto(managerProduct.getId(), memberId, managerProduct.getProductName(),
+                    managerProduct.getProductImage(), managerProduct.getProductPrice(), managerProduct.getProductContent(),
+                    managerProduct.getProductQuantity(), managerProduct.getCategory().getProductCategory());
             myPageSetDtos.add(setDto);
         }
         return myPageSetDtos;
+
     }
 }

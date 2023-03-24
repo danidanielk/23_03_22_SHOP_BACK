@@ -37,7 +37,7 @@ public class ProductController {
 
 
 
-    //상풍 리스트
+    //카테고리에 맞는 상풍 리스트
     @ApiResponse(responseCode = "200",description = "상품 리스트",content = @Content(schema = @Schema(implementation = ProductListSetDto.class)))
     @Operation(summary = "상품리스트",description = "상품리스트")
     @PostMapping("category/{category}")
@@ -51,7 +51,7 @@ public class ProductController {
     }
 
 
-    //상품 디테일
+    //카테고리안의 상품 선택 시 상품 디테일 화면
     @ApiResponse(responseCode = "200", description = "상품 디테일",content = @Content(schema = @Schema(implementation = ProductDetailSetDto.class)))
     @Operation(summary = "상품 디테일",description = "상품 디테일")
     @PostMapping("productid/{productId}")

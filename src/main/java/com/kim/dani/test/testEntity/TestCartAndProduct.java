@@ -29,5 +29,4 @@ public class TestCartAndProduct {
     @ManyToOne
     @JoinColumn(name = "testProduct")
     private TestProduct testProduct;
-
 }

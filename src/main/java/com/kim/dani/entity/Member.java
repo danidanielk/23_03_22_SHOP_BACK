@@ -1,5 +1,6 @@
 package com.kim.dani.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,11 +34,12 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private Auth auth;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products = new ArrayList<>();
 
-    @OneToOne
-    @JoinColumn(name = "cart_id")
+    @JsonIgnore
+    @OneToOne(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
     private Cart cart;
 
 }
