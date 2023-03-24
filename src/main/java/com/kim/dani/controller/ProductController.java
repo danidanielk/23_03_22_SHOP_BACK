@@ -72,6 +72,7 @@ public class ProductController {
 
         productService.productAdd(productId, req);
         return new ResponseEntity(HttpStatus.OK);
+        //commit
     }
 
 
