@@ -22,6 +22,8 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String address;
+
     @Column(unique = true)
     private String Email;
 
@@ -41,5 +43,13 @@ public class Member {
     @JsonIgnore
     @OneToOne(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
     private Cart cart;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<CartProduct> cartProducts = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<Buyer> buyers = new ArrayList<>();
 
 }

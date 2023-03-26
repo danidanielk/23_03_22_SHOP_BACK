@@ -25,7 +25,7 @@ public class ProductUploadSetDto {
 
     private String productContent;
 
-    private Long productQuentity;
+    private Long productQuantity;
 
     private String category;
 }

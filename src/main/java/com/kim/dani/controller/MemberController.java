@@ -3,7 +3,9 @@ package com.kim.dani.controller;
 
 import com.kim.dani.dtoGet.MemberLoginGetDto;
 import com.kim.dani.dtoGet.MemberSigninGetDto;
+import com.kim.dani.dtoGet.OrderGetDto;
 import com.kim.dani.dtoSet.AuthSetDto;
+import com.kim.dani.dtoSet.BuySetDto;
 import com.kim.dani.dtoSet.MemberLoginSetDto;
 import com.kim.dani.dtoSet.MyPageSetDto;
 import com.kim.dani.entity.Auth;
@@ -99,6 +101,60 @@ public class MemberController {
                 }
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
+
+    @ApiResponse(responseCode =  " 200",description = "장바구니 상품 삭제")
+    @Operation(summary = "장바구니 상품 삭제", description = "회원 장바구니 상품 삭제")
+    @DeleteMapping("/delete/{cartProductId}")
+    public ResponseEntity delete (@PathVariable Long cartProductId , HttpServletRequest req) {
+
+        boolean answer = memberService.delete(cartProductId, req);
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+
+
+    // 상품 리스트에서 바로 구매시
+    @PreAuthorize("authenticated()")
+    @GetMapping("/buy/{productId}")
+    public ResponseEntity buy (@PathVariable Long productId,HttpServletRequest req) {
+        BuySetDto setDto = memberService.buy(productId, req);
+
+        if (setDto != null) {
+            return new ResponseEntity(setDto, HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+    // 장바구니 리스트에서 구매시
+
+    @PreAuthorize("authenticated()")
+    @GetMapping("/buycart/{cartProductId}")
+    public ResponseEntity cartBuy (@PathVariable Long cartProductId , HttpServletRequest req){
+        BuySetDto setDto = memberService.cartBuy(cartProductId, req);
+
+                if (setDto != null){
+                    return new ResponseEntity(setDto, HttpStatus.OK);
+                }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+    @PreAuthorize("authenticated()")
+    @PostMapping("/order")
+    public ResponseEntity order (@RequestBody OrderGetDto orderGetDto, HttpServletRequest req) {
+        boolean answer = memberService.order(orderGetDto, req);
+
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+    }
+
+
+
+
 
 
 

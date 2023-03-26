@@ -1,6 +1,5 @@
 package com.kim.dani.dtoSet;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,15 +7,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class MyPageSetDto {
+@NoArgsConstructor
+public class ProductListAllSetDto {
 
     private Long productId;
-
-    private Long cartProductId;
-
-    private Long memberId;
 
     private String productName;
 
@@ -28,11 +23,6 @@ public class MyPageSetDto {
 
     private Long productQuantity;
 
-    private Long thisQuantity;
-
-
-
     private String category;
-
 
 }

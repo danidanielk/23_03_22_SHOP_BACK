@@ -1,16 +1,22 @@
 package com.kim.dani.dtoSet;
 
-
+import com.kim.dani.entity.Category;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class ProductDetailSetDto {
+@NoArgsConstructor
+public class BuySetDto {
+
 
     private Long productId;
 
@@ -26,5 +32,10 @@ public class ProductDetailSetDto {
 
     private String category;
 
+    private Long MemberId;
+
+    private String Email;
+
+    private String phone;
 
 }

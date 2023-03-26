@@ -3,12 +3,12 @@ package com.kim.dani.service;
 
 import com.kim.dani.dtoGet.MemberLoginGetDto;
 import com.kim.dani.dtoGet.MemberSigninGetDto;
-import com.kim.dani.dtoSet.AuthSetDto;
-import com.kim.dani.dtoSet.MemberLoginSetDto;
-import com.kim.dani.dtoSet.MyPageSetDto;
-import com.kim.dani.dtoSet.TokenSetDto;
+import com.kim.dani.dtoGet.OrderGetDto;
+import com.kim.dani.dtoSet.*;
 import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
+import com.kim.dani.repository.BuyerRepository;
+import com.kim.dani.repository.CartAndProductRepository;
 import com.kim.dani.repository.MemberRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +26,15 @@ public class MemberService {
 
     private final JPAQueryFactory queryFactory;
     private final MemberRepository memberRepository;
+    private final BuyerRepository buyerRepository;
     private final QMember qmember = QMember.member;
     private final QCart qCart = QCart.cart;
     private final QCartAndProduct qCartAndProduct = QCartAndProduct.cartAndProduct;
     private final QProduct qProduct = QProduct.product;
+    private final QCartProduct qCartProduct = QCartProduct.cartProduct;
+    private final QBuyer qBuyer = QBuyer.buyer;
     private final JwtTokenV2 jwtTokenV2;
+    private final CartAndProductRepository cartAndProductRepository;
 
 
     //회원가입
@@ -39,8 +43,8 @@ public class MemberService {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encoderPassword = passwordEncoder.encode(pw);
         if(memberSigninGetDto.getEmail().equals("master@master")){
-        Member member1 = new Member(null, memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
-                encoderPassword, Auth.MANAGER,null,null);
+        Member member1 = new Member(null, null,memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
+                encoderPassword, Auth.MANAGER,null,null,null,null);
             try {
             memberRepository.save(member1);
             return true;
@@ -48,8 +52,8 @@ public class MemberService {
             return false;
             }
         }
-        Member member1 = new Member(null, memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
-                encoderPassword, Auth.CUSTOMER,null,null);
+        Member member1 = new Member(null, null,memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
+                encoderPassword, Auth.CUSTOMER,null,null,null,null);
         try {
             memberRepository.save(member1);
             return true;
@@ -106,20 +110,25 @@ public class MemberService {
                 .fetchOne();
 
             List<MyPageSetDto> myPageSetDtos = new ArrayList<>();
+
+
         if (member1.getAuth().equals(Auth.CUSTOMER)) {
-            List<Product> products = queryFactory
-                    .select(qProduct)
+
+//            List<CartProduct> cartProducts = queryFactory
+
+            List<CartProduct> products = queryFactory
+                    .select(qCartProduct)
                     .from(qmember)
                     .leftJoin(qmember.cart, qCart)
                     .leftJoin(qCart.cartAndProduct, qCartAndProduct)
-                    .leftJoin(qCartAndProduct.product, qProduct)
+                    .leftJoin(qCartAndProduct.cartProduct, qCartProduct)
                     .where(qmember.eq(member1))
                     .fetch();
 
-            for (Product product : products) {
-                MyPageSetDto setDto = new MyPageSetDto(product.getId(), memberId, product.getProductName(),
+            for (CartProduct product : products) {
+                MyPageSetDto setDto = new MyPageSetDto(product.getProductId(), product.getId(), memberId, product.getProductName(),
                         product.getProductImage(), product.getProductPrice(), product.getProductContent(),
-                        product.getProductQuantity(), product.getCategory().getProductCategory());
+                        null,product.getProductQuantity(), product.getCategory());
                 myPageSetDtos.add(setDto);
             }
             return myPageSetDtos;
@@ -129,12 +138,103 @@ public class MemberService {
                 .where(qProduct.member.eq(member1))
                 .fetch();
         for (Product managerProduct : managerProducts) {
-            MyPageSetDto setDto = new MyPageSetDto(managerProduct.getId(), memberId, managerProduct.getProductName(),
+            MyPageSetDto setDto = new MyPageSetDto(managerProduct.getId(),null, memberId, managerProduct.getProductName(),
                     managerProduct.getProductImage(), managerProduct.getProductPrice(), managerProduct.getProductContent(),
-                    managerProduct.getProductQuantity(), managerProduct.getCategory().getProductCategory());
+                    managerProduct.getProductQuantity(),null, managerProduct.getCategory().getProductCategory());
             myPageSetDtos.add(setDto);
         }
         return myPageSetDtos;
 
     }
+
+
+    //회원 myPage cart 선택 상품 삭제.
+    public boolean delete (Long cartProductId , HttpServletRequest req) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.Email.eq(getEmail))
+                .fetchOne();
+
+
+        CartAndProduct cartAndProduct = queryFactory
+                .selectFrom(qCartAndProduct)
+                .where(qCartAndProduct.cart.member.eq(member))
+                .where(qCartAndProduct.cartProduct.id.eq(cartProductId))
+                .fetchOne();
+
+
+        cartAndProductRepository.delete(cartAndProduct);
+        return true;
+
+
+    }
+
+    //장바구니에 담지않고 바로 주문
+    public BuySetDto buy(Long productId , HttpServletRequest req) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.Email.eq(getEmail))
+                .fetchOne();
+
+        Product product = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.id.eq(productId))
+                .fetchOne();
+
+        BuySetDto setDto = new BuySetDto(productId, product.getProductName(), product.getProductImage(),
+                product.getProductPrice(), product.getProductContent(), product.getProductQuantity(),
+                product.getCategory().getProductCategory(), member.getId(), member.getEmail(), member.getPhone());
+
+        return setDto;
+    }
+
+    //장바구니에 담아서 주문
+    public BuySetDto cartBuy(Long cartProductId , HttpServletRequest req) {
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.Email.eq(getEmail))
+                .fetchOne();
+
+        CartProduct cartProduct = queryFactory
+                .selectFrom(qCartProduct)
+                .where(qCartProduct.id.eq(cartProductId))
+                .fetchOne();
+
+        BuySetDto setDto = new BuySetDto(cartProductId, cartProduct.getProductName(), cartProduct.getProductImage(),
+                cartProduct.getProductPrice(), cartProduct.getProductContent(), cartProduct.getProductQuantity(),
+                cartProduct.getCategory(), member.getId(), member.getEmail(), member.getPhone());
+
+        return setDto;
+    }
+
+
+    //주문내역 저장
+    public boolean order(OrderGetDto orderGetDto, HttpServletRequest req) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.Email.eq(getEmail))
+                .fetchOne();
+
+
+        Buyer buyer = new Buyer(null, orderGetDto.getAddress(), orderGetDto.getEmail(), orderGetDto.getPhone(),
+                orderGetDto.getProductName(), orderGetDto.getProductPrice(), orderGetDto.getProductQuantity(),
+                orderGetDto.getMessage(), member);
+
+        buyerRepository.save(buyer);
+        return true;
+    }
+
+
+
 }

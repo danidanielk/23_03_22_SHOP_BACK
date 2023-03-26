@@ -3,6 +3,7 @@ package com.kim.dani.controller;
 
 import com.kim.dani.dtoGet.ProductUploadGetDto;
 import com.kim.dani.dtoSet.ProductDetailSetDto;
+import com.kim.dani.dtoSet.ProductListAllSetDto;
 import com.kim.dani.dtoSet.ProductListSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.entity.Product;
@@ -67,13 +68,29 @@ public class ProductController {
     //상품 Mypage에 추가 버튼
     @ApiResponse(responseCode = "200",description = "MyPage에 상품 추가")
     @Operation(summary = "상품 추가",description = "상품 추가")
-    @GetMapping("product/add/{productId}")
-    public ResponseEntity productAdd(@PathVariable Long productId, HttpServletRequest req){
+    @GetMapping("product/add/{productId}/{inQuantity}/{setPrice}")
+    public ResponseEntity productAdd(@PathVariable Long productId ,
+                                     @PathVariable Long inQuantity,
+                                     @PathVariable Long setPrice,
+                                     HttpServletRequest req){
 
-        productService.productAdd(productId, req);
+        productService.productAdd(productId,inQuantity,setPrice, req);
         return new ResponseEntity(HttpStatus.OK);
         //commit
     }
+
+    //전체 상품 list page
+    @ApiResponse(responseCode = "200",description = "전체상품 리스트")
+    @Operation(summary = "전체상품",description = "전체상품 리스트")
+    @PostMapping("listall")
+    public ResponseEntity listAll() {
+        List<ProductListAllSetDto> productListAllSetDtos = productService.listAll();
+        if (productListAllSetDtos != null  ) {
+            return new ResponseEntity(productListAllSetDtos, HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
 
 
 

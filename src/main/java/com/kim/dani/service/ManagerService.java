@@ -2,6 +2,7 @@ package com.kim.dani.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.entity.*;
@@ -79,16 +80,94 @@ public class ManagerService {
                 path,
                 productUploadGetDto.getProductPrice(),
                 productUploadGetDto.getProductContent(),
-                productUploadGetDto.getProductQuentity(),
-                category,member ,null);
+                productUploadGetDto.getProductQuantity(),
+                category,member );
         productRepository.save(product);
 
 
         return new ProductUploadSetDto(product.getProductName(),
                 path,productUploadGetDto.getProductPrice(),
                 productUploadGetDto.getProductContent(),
-                productUploadGetDto.getProductQuentity(),
+                productUploadGetDto.getProductQuantity(),
                 productUploadGetDto.getProductCategory());
     }
 
+
+    //상품 삭제
+    public boolean delete(Long productId, HttpServletRequest req) {
+
+
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qMember)
+                .where(qMember.Email.eq(getEmail))
+                .fetchOne();
+
+        Product product = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.id.eq(productId))
+                .fetchOne();
+
+        if (member.getAuth().equals(Auth.MANAGER)) {
+        productRepository.delete(product);
+            return true;
+        }
+        return false;
+    }
+
+
+    //상품 수정
+    public boolean patch(Long productId, HttpServletRequest req, ProductPatchGetDto productPatchGetDto,MultipartFile file) throws IOException {
+
+
+
+        if (file != null) {
+            String imagePath = photoS3Upload(file);
+        } else {
+        String imagePath = null;
+        }
+        String category = productPatchGetDto.getCategory();
+        String content = productPatchGetDto.getProductContent();
+        String price = productPatchGetDto.getProductPrice();
+        String name = productPatchGetDto.getProductName();
+        Long quentity = productPatchGetDto.getProductQuentity();
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qMember)
+                .where(qMember.Email.eq(getEmail))
+                .fetchOne();
+
+        Product product = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.id.eq(productId))
+                .fetchOne();
+
+        if (member.getAuth().equals(Auth.MANAGER)) {
+            if (file != null) {
+                String imagePath = photoS3Upload(file);
+            product.setProductImage(imagePath);
+            product.setProductContent(category == null || category == ""?product.getCategory().getProductCategory() : category);
+            product.setProductName(name == null || name == "" ? product.getProductName() : name);
+            product.setProductPrice(price == null || price =="" ? product.getProductPrice() : price);
+            product.setProductQuantity(quentity == null ? product.getProductQuantity() : quentity);
+            product.setProductContent(content == null || content == "" ? product.getProductContent() : content);
+            productRepository.save(product);
+            return true;
+            } else if (file == null) {
+                product.setProductImage(product.getProductImage());
+                product.setProductContent(category == null || category == ""?product.getCategory().getProductCategory() : category);
+                product.setProductName(name == null || name == "" ? product.getProductName() : name);
+                product.setProductPrice(price == null || price =="" ? product.getProductPrice() : price);
+                product.setProductQuantity(quentity == null ? product.getProductQuantity() : quentity);
+                product.setProductContent(content == null || content == "" ? product.getProductContent() : content);
+                productRepository.save(product);
+                return true;
+            }
+        }
+        return false;
+    }
 }

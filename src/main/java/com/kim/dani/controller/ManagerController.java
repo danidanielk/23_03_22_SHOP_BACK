@@ -1,6 +1,7 @@
 package com.kim.dani.controller;
 
 
+import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.service.ManagerService;
@@ -13,10 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +49,33 @@ public class ManagerController {
     }
 
 
+    //상품 삭제
+    @ApiResponse(responseCode = "200", description = "상품 삭제")
+    @Operation(summary =  "상품삭제",description = "상품삭제")
+    @DeleteMapping("/delete/{productid}")
+    @PreAuthorize("authenticated()")
+    public ResponseEntity delete(@PathVariable Long productid,HttpServletRequest req) {
+        boolean answer = managerService.delete(productid, req);
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
 
+
+    //상품 수정
+    @ApiResponse(responseCode = "200",description = "상품 수정",content = @Content(schema = @Schema(implementation = ProductPatchGetDto.class)))
+    @Operation(summary = "상품수정",description = "상품수정")
+    @PatchMapping("/patch/{productid}")
+    @PreAuthorize("authenticated()")
+    public ResponseEntity patch(@PathVariable Long productid,HttpServletRequest req,
+                                @Valid @RequestPart("formData") ProductPatchGetDto productPatchGetDto,
+                                @RequestParam(value = "productImage",required = false) MultipartFile file) throws IOException {
+        boolean answer = managerService.patch(productid, req,productPatchGetDto,file);
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
 
 }

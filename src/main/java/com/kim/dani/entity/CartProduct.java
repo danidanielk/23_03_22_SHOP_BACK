@@ -1,6 +1,5 @@
 package com.kim.dani.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,11 +15,14 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product {
+public class CartProduct {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    private Long productId;
 
     private String productName;
 
@@ -33,13 +35,14 @@ public class Product {
 
     private Long productQuantity;
 
-    @JoinColumn(name = "category_id")
-    @ManyToOne(cascade = CascadeType.ALL)
-    private Category category;
+    private String category;
 
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member")
     @ManyToOne
     private Member member;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "cartProduct", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartAndProduct> cartAndProduct = new ArrayList<>();
 
 }

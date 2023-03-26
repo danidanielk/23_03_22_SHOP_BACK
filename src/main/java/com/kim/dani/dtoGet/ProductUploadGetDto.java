@@ -30,7 +30,7 @@ public class ProductUploadGetDto {
     private String productContent;
 
     @Schema(description = "재고 수량")
-    private Long productQuentity;
+    private Long productQuantity;
 
     @Schema(description = "상품 카테고리 Category Entity")
     private String productCategory;
