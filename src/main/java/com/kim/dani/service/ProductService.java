@@ -92,7 +92,7 @@ public class ProductService {
 
         Member member = queryFactory
                 .selectFrom(qMember)
-                .where(qMember.Email.eq(MemberEmail))
+                .where(qMember.email.eq(MemberEmail))
                 .fetchOne();
 
         CartProduct cartProduct = new CartProduct(null,product.getId(), product.getProductName(), product.getProductImage(),

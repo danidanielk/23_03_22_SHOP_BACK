@@ -4,9 +4,11 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
+import com.kim.dani.dtoSet.OrderListManagerSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
+import com.kim.dani.repository.BuyerRepository;
 import com.kim.dani.repository.CategoryRepository;
 import com.kim.dani.repository.ProductRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -17,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -35,6 +39,8 @@ public class ManagerService {
     private final AmazonS3Client amazonS3Client;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final BuyerRepository buyerRepository;
+    private final QBuyer qBuyer = QBuyer.buyer;
     private final JPAQueryFactory queryFactory;
     private final QProduct qProduct = QProduct.product;
     private final QMember qMember = QMember.member;
@@ -67,7 +73,7 @@ public class ManagerService {
         String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
         Member member = queryFactory
                 .selectFrom(qMember)
-                .where(qMember.Email.eq(getEmail))
+                .where(qMember.email.eq(getEmail))
                 .fetchOne();
 
         String path = photoS3Upload(file);
@@ -102,7 +108,7 @@ public class ManagerService {
 
         Member member = queryFactory
                 .selectFrom(qMember)
-                .where(qMember.Email.eq(getEmail))
+                .where(qMember.email.eq(getEmail))
                 .fetchOne();
 
         Product product = queryFactory
@@ -138,7 +144,7 @@ public class ManagerService {
 
         Member member = queryFactory
                 .selectFrom(qMember)
-                .where(qMember.Email.eq(getEmail))
+                .where(qMember.email.eq(getEmail))
                 .fetchOne();
 
         Product product = queryFactory
@@ -170,4 +176,35 @@ public class ManagerService {
         }
         return false;
     }
+
+    //주문 내역
+    public List<OrderListManagerSetDto> orderList(HttpServletRequest req) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        System.out.println(getEmail+"4444444444444444");
+        List<Buyer> buyer = queryFactory
+                .selectFrom(qBuyer)
+                .orderBy(qBuyer.id.desc())
+                .fetch();
+
+        List<OrderListManagerSetDto> orderListManagerSetDtos = new ArrayList<>();
+        if (buyer != null) {
+            for (Buyer buyer1 : buyer) {
+                OrderListManagerSetDto setDto = new OrderListManagerSetDto();
+                setDto.setOrderId(buyer1.getId());
+                setDto.setAddress(buyer1.getAddress());
+                setDto.setMessage(buyer1.getMessage());
+                setDto.setEmail(buyer1.getEmail());
+                setDto.setPhone(buyer1.getPhone());
+                setDto.setProductPrice(buyer1.getProductPrice());
+                setDto.setProductName(buyer1.getProductName());
+                setDto.setProductQuantity(buyer1.getProductQuantity());
+                orderListManagerSetDtos.add(setDto);
+            }
+            return orderListManagerSetDtos;
+        }
+        return null;
+    }
+
 }

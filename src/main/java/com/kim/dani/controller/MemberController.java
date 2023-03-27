@@ -4,12 +4,10 @@ package com.kim.dani.controller;
 import com.kim.dani.dtoGet.MemberLoginGetDto;
 import com.kim.dani.dtoGet.MemberSigninGetDto;
 import com.kim.dani.dtoGet.OrderGetDto;
-import com.kim.dani.dtoSet.AuthSetDto;
-import com.kim.dani.dtoSet.BuySetDto;
-import com.kim.dani.dtoSet.MemberLoginSetDto;
-import com.kim.dani.dtoSet.MyPageSetDto;
+import com.kim.dani.dtoSet.*;
 import com.kim.dani.entity.Auth;
 import com.kim.dani.entity.Member;
+import com.kim.dani.jwt.JwtTokenV2;
 import com.kim.dani.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +37,7 @@ public class MemberController {
 
 
     private final MemberService memberService;
+    private final JwtTokenV2 jwtTokenV2;
 
 
 //    @ApiResponse(value={
@@ -116,7 +115,7 @@ public class MemberController {
 
 
 
-    // 상품 리스트에서 바로 구매시
+    // 상품 리스트에서 바로 구매시 주문서에 회원정보, 상품정보 자동입력
     @PreAuthorize("authenticated()")
     @GetMapping("/buy/{productId}")
     public ResponseEntity buy (@PathVariable Long productId,HttpServletRequest req) {
@@ -128,8 +127,7 @@ public class MemberController {
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
 
-    // 장바구니 리스트에서 구매시
-
+    // 장바구니 리스트에서 구매시 주문서에 회원정보, 상품정보 자동입력
     @PreAuthorize("authenticated()")
     @GetMapping("/buycart/{cartProductId}")
     public ResponseEntity cartBuy (@PathVariable Long cartProductId , HttpServletRequest req){
@@ -141,16 +139,50 @@ public class MemberController {
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
 
+
+    //주문하고 저장하기
     @PreAuthorize("authenticated()")
     @PostMapping("/order")
-    public ResponseEntity order (@RequestBody OrderGetDto orderGetDto, HttpServletRequest req) {
+    public ResponseEntity order (@Valid @RequestBody OrderGetDto orderGetDto, HttpServletRequest req) {
+//        System.out.println(orderGetDto.getEmail());
         boolean answer = memberService.order(orderGetDto, req);
 
         if (answer) {
             return new ResponseEntity(HttpStatus.OK);
         }
-        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        String email =jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        System.out.println(email);
+        return new ResponseEntity("재고부족",HttpStatus.BAD_REQUEST);
     }
+
+
+    //나의 주문내역
+    @GetMapping("/orderlist")
+    public ResponseEntity orderList(HttpServletRequest req) {
+
+        List<OrderListCustomerSetDto> setDto = memberService.orderList(req);
+        if (setDto != null) {
+            return new ResponseEntity(setDto, HttpStatus.OK);
+        }
+        return new ResponseEntity("주문내역이 없습니다", HttpStatus.NOT_FOUND);
+    }
+
+    //주문 취소
+    @DeleteMapping("/cancel/{orderId}")
+    public ResponseEntity cancel(@PathVariable Long orderId, HttpServletRequest req) {
+        boolean answer = memberService.cancel(req,orderId);
+
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+
+//    @PostMapping
+//    public ResponseEntity inquire(@RequestBody )
+
+
 
 
 

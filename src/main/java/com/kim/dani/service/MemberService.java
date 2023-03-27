@@ -10,6 +10,7 @@ import com.kim.dani.jwt.JwtTokenV2;
 import com.kim.dani.repository.BuyerRepository;
 import com.kim.dani.repository.CartAndProductRepository;
 import com.kim.dani.repository.MemberRepository;
+import com.kim.dani.repository.ProductRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +28,8 @@ public class MemberService {
     private final JPAQueryFactory queryFactory;
     private final MemberRepository memberRepository;
     private final BuyerRepository buyerRepository;
+    private final ProductRepository productRepository;
+    private final CartAndProductRepository cartAndProductRepository;
     private final QMember qmember = QMember.member;
     private final QCart qCart = QCart.cart;
     private final QCartAndProduct qCartAndProduct = QCartAndProduct.cartAndProduct;
@@ -34,7 +37,6 @@ public class MemberService {
     private final QCartProduct qCartProduct = QCartProduct.cartProduct;
     private final QBuyer qBuyer = QBuyer.buyer;
     private final JwtTokenV2 jwtTokenV2;
-    private final CartAndProductRepository cartAndProductRepository;
 
 
     //회원가입
@@ -67,7 +69,7 @@ public class MemberService {
     public MemberLoginSetDto login(MemberLoginGetDto memberLoginGetDto, HttpServletResponse res) {
         Member getMember = queryFactory
                 .selectFrom(qmember)
-                .where(qmember.Email.eq(memberLoginGetDto.getEmail()))
+                .where(qmember.email.eq(memberLoginGetDto.getEmail()))
                 .fetchOne();
         String plainEmail = memberLoginGetDto.getEmail();
         String plainPassword = memberLoginGetDto.getPassword();
@@ -93,7 +95,7 @@ public class MemberService {
         }
         Member member1 = queryFactory
                 .selectFrom(qmember)
-                .where(qmember.Email.eq(email))
+                .where(qmember.email.eq(email))
                 .fetchOne();
 
         AuthSetDto authSetDto = new AuthSetDto(member1.getId(), member1.getAuth());
@@ -155,7 +157,7 @@ public class MemberService {
 
         Member member = queryFactory
                 .selectFrom(qmember)
-                .where(qmember.Email.eq(getEmail))
+                .where(qmember.email.eq(getEmail))
                 .fetchOne();
 
 
@@ -179,7 +181,7 @@ public class MemberService {
 
         Member member = queryFactory
                 .selectFrom(qmember)
-                .where(qmember.Email.eq(getEmail))
+                .where(qmember.email.eq(getEmail))
                 .fetchOne();
 
         Product product = queryFactory
@@ -200,7 +202,7 @@ public class MemberService {
 
         Member member = queryFactory
                 .selectFrom(qmember)
-                .where(qmember.Email.eq(getEmail))
+                .where(qmember.email.eq(getEmail))
                 .fetchOne();
 
         CartProduct cartProduct = queryFactory
@@ -219,13 +221,22 @@ public class MemberService {
     //주문내역 저장
     public boolean order(OrderGetDto orderGetDto, HttpServletRequest req) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+//        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
 
+        String getEmail = orderGetDto.getEmail();
         Member member = queryFactory
                 .selectFrom(qmember)
-                .where(qmember.Email.eq(getEmail))
+                .where(qmember.email.eq(getEmail))
                 .fetchOne();
 
+        Product product = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.productName.eq(orderGetDto.getProductName()))
+                .fetchOne();
+
+        if (product.getProductQuantity() >= orderGetDto.getProductQuantity()) {
+        product.setProductQuantity(product.getProductQuantity() - orderGetDto.getProductQuantity());
+        productRepository.save(product);
 
         Buyer buyer = new Buyer(null, orderGetDto.getAddress(), orderGetDto.getEmail(), orderGetDto.getPhone(),
                 orderGetDto.getProductName(), orderGetDto.getProductPrice(), orderGetDto.getProductQuantity(),
@@ -233,6 +244,66 @@ public class MemberService {
 
         buyerRepository.save(buyer);
         return true;
+        }
+        return false;
+
+    }
+
+
+    // 주문취소 (수량 반환)
+    public boolean cancel(HttpServletRequest req,Long orderId) {
+
+        String getEmail= jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(getEmail))
+                .fetchOne();
+
+        Buyer buyer = queryFactory
+                .selectFrom(qBuyer)
+                .where(qBuyer.id.eq(orderId))
+                .fetchOne();
+
+        String productName = buyer.getProductName();
+
+        Product product = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.productName.eq(productName))
+                .fetchOne();
+
+        Long productQuantity = buyer.getProductQuantity();
+
+        product.setProductQuantity(productQuantity + product.getProductQuantity());
+        productRepository.save(product);
+
+        buyerRepository.delete(buyer);
+        return true;
+
+    }
+
+    public List<OrderListCustomerSetDto> orderList(HttpServletRequest request) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(request);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(getEmail))
+                .fetchOne();
+
+        List<Buyer> buyers = queryFactory
+                .selectFrom(qBuyer)
+                .where(qBuyer.member.eq(member))
+                .fetch();
+
+        List<OrderListCustomerSetDto> setDtos = new ArrayList<>();
+        for (Buyer buyer : buyers) {
+            OrderListCustomerSetDto setDto = new OrderListCustomerSetDto(buyer.getId(), buyer.getAddress(),
+                    buyer.getEmail(), buyer.getPhone(), buyer.getProductName(), buyer.getProductPrice(),
+                    buyer.getProductQuantity(), buyer.getMessage());
+            setDtos.add(setDto);
+        }
+        return setDtos;
     }
 
 

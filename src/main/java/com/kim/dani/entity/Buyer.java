@@ -20,7 +20,7 @@ public class Buyer {
 
     private String address;
 
-    private String Email;
+    private String email;
 
     private String phone;
 

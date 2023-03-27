@@ -32,9 +32,9 @@ public class BuySetDto {
 
     private String category;
 
-    private Long MemberId;
+    private Long memberId;
 
-    private String Email;
+    private String email;
 
     private String phone;
 

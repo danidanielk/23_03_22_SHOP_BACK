@@ -3,6 +3,7 @@ package com.kim.dani.controller;
 
 import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
+import com.kim.dani.dtoSet.OrderListManagerSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.service.ManagerService;
 import com.kim.dani.service.ProductService;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -74,6 +76,17 @@ public class ManagerController {
         boolean answer = managerService.patch(productid, req,productPatchGetDto,file);
         if (answer) {
             return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+    //주문 내역
+    @GetMapping("/orderlist")
+    public ResponseEntity orderList(HttpServletRequest req) {
+
+        List<OrderListManagerSetDto> setDto = managerService.orderList(req);
+        if (setDto != null) {
+            return new ResponseEntity(setDto, HttpStatus.OK);
         }
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }

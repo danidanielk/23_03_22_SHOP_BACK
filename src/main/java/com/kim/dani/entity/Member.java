@@ -25,7 +25,7 @@ public class Member {
     private String address;
 
     @Column(unique = true)
-    private String Email;
+    private String email;
 
 
     private String phone;
