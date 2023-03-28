@@ -1,16 +1,11 @@
 package com.kim.dani.service;
 
 
-import com.kim.dani.dtoGet.MemberLoginGetDto;
-import com.kim.dani.dtoGet.MemberSigninGetDto;
-import com.kim.dani.dtoGet.OrderGetDto;
+import com.kim.dani.dtoGet.*;
 import com.kim.dani.dtoSet.*;
 import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
-import com.kim.dani.repository.BuyerRepository;
-import com.kim.dani.repository.CartAndProductRepository;
-import com.kim.dani.repository.MemberRepository;
-import com.kim.dani.repository.ProductRepository;
+import com.kim.dani.repository.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,12 +25,14 @@ public class MemberService {
     private final BuyerRepository buyerRepository;
     private final ProductRepository productRepository;
     private final CartAndProductRepository cartAndProductRepository;
+    private final BoardRepository boardRepository;
     private final QMember qmember = QMember.member;
     private final QCart qCart = QCart.cart;
     private final QCartAndProduct qCartAndProduct = QCartAndProduct.cartAndProduct;
     private final QProduct qProduct = QProduct.product;
     private final QCartProduct qCartProduct = QCartProduct.cartProduct;
     private final QBuyer qBuyer = QBuyer.buyer;
+    private final QBoard qBoard = QBoard.board;
     private final JwtTokenV2 jwtTokenV2;
 
 
@@ -46,7 +43,7 @@ public class MemberService {
         String encoderPassword = passwordEncoder.encode(pw);
         if(memberSigninGetDto.getEmail().equals("master@master")){
         Member member1 = new Member(null, null,memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
-                encoderPassword, Auth.MANAGER,null,null,null,null);
+                encoderPassword, Auth.MANAGER,null,null,null,null,null);
             try {
             memberRepository.save(member1);
             return true;
@@ -55,7 +52,7 @@ public class MemberService {
             }
         }
         Member member1 = new Member(null, null,memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
-                encoderPassword, Auth.CUSTOMER,null,null,null,null);
+                encoderPassword, Auth.CUSTOMER,null,null,null,null,null);
         try {
             memberRepository.save(member1);
             return true;
@@ -282,6 +279,8 @@ public class MemberService {
 
     }
 
+
+    //나의 주문 내역
     public List<OrderListCustomerSetDto> orderList(HttpServletRequest request) {
 
         String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(request);
@@ -307,5 +306,73 @@ public class MemberService {
     }
 
 
+    //회원정보 수정페이지 기본데이터
+    public ModifyDataSetDto modifyData(HttpServletRequest req) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(getEmail))
+                .fetchOne();
+
+        if (member != null) {
+            ModifyDataSetDto modifyDataSetDto = new ModifyDataSetDto(member.getId(), member.getEmail(), member.getPhone());
+            return modifyDataSetDto;
+        }
+        return null;
+    }
+
+
+
+    //회원 비밀번호 수정
+    public boolean modifyInfo(ModifyDataGetDto modifyDataGetDto,HttpServletRequest req) {
+
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(getEmail))
+                .fetchOne();
+
+        if (modifyDataGetDto.getCurrentPassword() != null || modifyDataGetDto.getCurrentPassword() != "" &&
+            modifyDataGetDto.getPassword() != null || modifyDataGetDto.getPassword() !="" ) {
+        String currentPw = modifyDataGetDto.getCurrentPassword();
+        String hashedPw = member.getPassword();
+        boolean pwd = passwordEncoder.matches(currentPw, hashedPw);
+
+        if (pwd) {
+            String pw = passwordEncoder.encode(modifyDataGetDto.getPassword());
+//            member.setPhone(modifyDataGetDto.getPhone());
+            member.setPassword(pw);
+            memberRepository.save(member);
+            return true;
+        }
+        }
+        return false;
+    }
+
+
+    //회원 삭제
+    public boolean modifyDelete(Long memberId,HttpServletRequest req,String password) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(getEmail))
+                .fetchOne();
+
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        boolean pw = passwordEncoder.matches(password, member.getPassword());
+
+        if (member.getId() == memberId && pw) {
+            memberRepository.delete(member);
+            return true;
+        }
+        return false;
+    }
 
 }

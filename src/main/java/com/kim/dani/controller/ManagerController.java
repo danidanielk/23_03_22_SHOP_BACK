@@ -3,6 +3,8 @@ package com.kim.dani.controller;
 
 import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
+import com.kim.dani.dtoSet.BoardSetDto;
+import com.kim.dani.dtoSet.CustomerListSetDto;
 import com.kim.dani.dtoSet.OrderListManagerSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.service.ManagerService;
@@ -90,5 +92,20 @@ public class ManagerController {
         }
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
+
+
+    //회원 리스트
+    @GetMapping("/customer/list")
+    public ResponseEntity customerList(HttpServletRequest req) {
+
+        List<CustomerListSetDto> setDtos = managerService.customerList(req);
+
+        if (setDtos != null) {
+            return new ResponseEntity(setDtos, HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+    }
+
+
 
 }

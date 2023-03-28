@@ -1,9 +1,7 @@
 package com.kim.dani.controller;
 
 
-import com.kim.dani.dtoGet.MemberLoginGetDto;
-import com.kim.dani.dtoGet.MemberSigninGetDto;
-import com.kim.dani.dtoGet.OrderGetDto;
+import com.kim.dani.dtoGet.*;
 import com.kim.dani.dtoSet.*;
 import com.kim.dani.entity.Auth;
 import com.kim.dani.entity.Member;
@@ -179,8 +177,44 @@ public class MemberController {
     }
 
 
-//    @PostMapping
-//    public ResponseEntity inquire(@RequestBody )
+
+    //회원정보수정 페이지 내정보확인
+    @GetMapping("/modify/data")
+    public ResponseEntity modifyData( HttpServletRequest req) {
+
+        ModifyDataSetDto setDto1 = memberService.modifyData( req);
+
+        if (setDto1 != null) {
+            return new ResponseEntity(setDto1, HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+
+    }
+
+     //회원정보 수정 버튼
+    @PatchMapping("/modify")
+    public ResponseEntity modifyInfo (@RequestBody ModifyDataGetDto modifyDataGetDto,HttpServletRequest req) {
+
+        boolean answer = memberService.modifyInfo(modifyDataGetDto, req);
+
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+    }
+
+    //회원 삭제
+    @DeleteMapping("/modify/delete/{memberId}")
+    public ResponseEntity modifyDelete (@PathVariable Long memberId,HttpServletRequest req ,@RequestParam("password") String password) {
+
+        boolean answer = memberService.modifyDelete(memberId, req,password);
+
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+    }
+
 
 
 

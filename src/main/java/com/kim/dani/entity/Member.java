@@ -41,15 +41,17 @@ public class Member {
     private List<Product> products = new ArrayList<>();
 
     @JsonIgnore
-    @OneToOne(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Cart cart;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartProduct> cartProducts = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "member",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Buyer> buyers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Board> boards = new ArrayList<>();
 }

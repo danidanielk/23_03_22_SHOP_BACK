@@ -2,15 +2,20 @@ package com.kim.dani.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.kim.dani.dtoGet.BoardGetDto;
 import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
+import com.kim.dani.dtoSet.BoardSetDto;
+import com.kim.dani.dtoSet.CustomerListSetDto;
 import com.kim.dani.dtoSet.OrderListManagerSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
 import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
+import com.kim.dani.repository.BoardRepository;
 import com.kim.dani.repository.BuyerRepository;
 import com.kim.dani.repository.CategoryRepository;
 import com.kim.dani.repository.ProductRepository;
+import com.querydsl.core.types.Order;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,10 +45,13 @@ public class ManagerService {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final BuyerRepository buyerRepository;
+    private final BoardRepository boardRepository;
     private final QBuyer qBuyer = QBuyer.buyer;
     private final JPAQueryFactory queryFactory;
     private final QProduct qProduct = QProduct.product;
     private final QMember qMember = QMember.member;
+    private final QBoard qBoard = QBoard.board;
+    private final QCartProduct qCartProduct = QCartProduct.cartProduct;
     private final JwtTokenV2 jwtTokenV2;
 
 
@@ -177,7 +185,7 @@ public class ManagerService {
         return false;
     }
 
-    //주문 내역
+    //모든 주문 내역
     public List<OrderListManagerSetDto> orderList(HttpServletRequest req) {
 
         String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
@@ -206,5 +214,45 @@ public class ManagerService {
         }
         return null;
     }
+
+
+    //회원 리스트
+    public List<CustomerListSetDto> customerList(HttpServletRequest req) {
+
+        List<Member> member = queryFactory
+                .selectFrom(qMember)
+                .fetch();
+
+        List<CustomerListSetDto> setDtos = new ArrayList<>();
+        for (Member member1 : member) {
+            List<Buyer> buyers = queryFactory
+                    .selectFrom(qBuyer)
+                    .where(qBuyer.member.eq(member1))
+                    .fetch();
+
+                Long purchase = 0L;
+
+            for (Buyer buyer : buyers) {
+                purchase += buyer.getProductQuantity();
+            }
+
+                String gradle = null;
+            if (purchase <= 5) {
+                gradle = "silver";
+            } else if (purchase > 5  && purchase <= 10 ) {
+                gradle = "gold";
+            } else if (purchase > 10) {
+                gradle = "diamond";
+            }
+
+
+            CustomerListSetDto customerListSetDto = new CustomerListSetDto(member1.getEmail(), member1.getPhone(),
+                    purchase,gradle);
+            setDtos.add(customerListSetDto);
+        }
+        return setDtos;
+    }
+
+
 
 }

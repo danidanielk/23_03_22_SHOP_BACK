@@ -33,6 +33,6 @@ public class Buyer {
     private String message;
 
     @ManyToOne
-    @JoinColumn(name = "Member")
+    @JoinColumn(name = "member")
     private Member member;
 }
