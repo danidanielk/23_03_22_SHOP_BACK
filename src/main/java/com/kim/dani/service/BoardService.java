@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +31,9 @@ public class BoardService {
 
 
     //보드 저장
-    public boolean board(BoardGetDto boardGetDto , HttpServletRequest req) {
+    public boolean board(BoardGetDto boardGetDto , HttpServletRequest req, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -48,9 +49,10 @@ public class BoardService {
 
 
     //질문 리스트 (manager)
-    public List<BoardSetDto> boardList(HttpServletRequest req) {
+    public List<BoardSetDto> boardList(HttpServletRequest req, HttpServletResponse res) {
 
-        jwtTokenV2.tokenValidator(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
+//        jwtTokenV2.tokenValidator(req);
 
         List<Board> boards = queryFactory
                 .selectFrom(qBoard)
@@ -72,9 +74,9 @@ public class BoardService {
 
 
     //질문 리스트(customer)
-    public List<BoardSetDto> boardListCustomer(HttpServletRequest req) {
+    public List<BoardSetDto> boardListCustomer(HttpServletRequest req, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -99,7 +101,7 @@ public class BoardService {
 
 
     //질문 보기 (manager)
-    public BoardSetDto boardView(HttpServletRequest request,Long boardId) {
+    public BoardSetDto boardView(HttpServletRequest request,Long boardId, HttpServletResponse res) {
 
         Board board = queryFactory
                 .selectFrom(qBoard)
@@ -115,7 +117,7 @@ public class BoardService {
 
     //질문 보기(customer)
 
-    public BoardSetDto boardViewCustomer(HttpServletRequest request,Long boardId) {
+    public BoardSetDto boardViewCustomer(HttpServletRequest request,Long boardId, HttpServletResponse res) {
 
         Board board = queryFactory
                 .selectFrom(qBoard)
@@ -130,9 +132,9 @@ public class BoardService {
 
 
     //답변하기 (manager)
-    public boolean boardAnswer(HttpServletRequest req, BoardAnswerGetDto boardAnswerGetDto) {
+    public boolean boardAnswer(HttpServletRequest req, BoardAnswerGetDto boardAnswerGetDto, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         if (getEmail.equals("master@master")) {
 

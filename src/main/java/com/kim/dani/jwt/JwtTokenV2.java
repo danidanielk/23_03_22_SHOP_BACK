@@ -2,10 +2,7 @@ package com.kim.dani.jwt;
 
 
 import com.kim.dani.dtoSet.TokenSetDto;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -85,36 +82,58 @@ public class JwtTokenV2 {
 
                 }
 
-
             }
         }
         return false;
     }
 
 
-
-    public String tokenValidatiorAndGetEmail(HttpServletRequest req){
+    public String tokenValidatiorAndGetEmail(HttpServletRequest req,HttpServletResponse res ) {
         Cookie[] cookies = req.getCookies();
+        String accessToken = null;
         for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(accessTK)){
-                String token = cookie.getValue();
+            if (cookie.getName().equals(accessTK)) {
+                accessToken = cookie.getValue();
+                break;
+            }
+        }
+
+        if (accessToken != null) {
+            try {
                 Claims claims = Jwts.parser()
                         .setSigningKey(secretKey.getBytes())
-                        .parseClaimsJws(token)
+                        .parseClaimsJws(accessToken)
                         .getBody();
-                if(claims != null){
+                if (claims != null) {
                     String email = (String) claims.get("email");
                     return email;
                 }
-            } else if (cookie.getName().equals(refreshTK)) {
-                String token = cookie.getValue();
-                Claims claims = Jwts.parser()
-                        .setSigningKey(secretKey.getBytes())
-                        .parseClaimsJws(token)
-                        .getBody();
-                if(claims != null){
-                    String email = (String) claims.get("email");
-                    return email;
+            } catch (ExpiredJwtException e) {
+                // Access 토큰이 만료된 경우
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals(refreshTK)) {
+                        String refreshToken = cookie.getValue();
+                        try {
+                            Claims claims = Jwts.parser()
+                                    .setSigningKey(secretKey.getBytes())
+                                    .parseClaimsJws(refreshToken)
+                                    .getBody();
+                            if (claims != null) {
+                                String email = (String) claims.get("email");
+                                // 새로운 access 토큰 발급
+                                String newAccessToken = createToken(email, false);
+                                Cookie newAccessCookie = new Cookie(accessTK, newAccessToken);
+                                newAccessCookie.setMaxAge(60 * 10); // 10분
+                                newAccessCookie.setHttpOnly(true);
+                                newAccessCookie.setPath("/");
+                                res.addCookie(newAccessCookie);
+                                return email;
+                            }
+                        } catch (ExpiredJwtException ex) {
+                            // Refresh 토큰도 만료된 경우
+                            return null;
+                        }
+                    }
                 }
             }
         }

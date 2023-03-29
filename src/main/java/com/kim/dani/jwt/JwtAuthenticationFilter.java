@@ -25,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if(jwtToken.tokenValidator(request)){
             //JWT 토큰이 융효한 경우 , 인증 정보 설정.
-            String email = jwtToken.tokenValidatiorAndGetEmail(request);
+            String email = jwtToken.tokenValidatiorAndGetEmail(request,response);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email, null, new ArrayList<>());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

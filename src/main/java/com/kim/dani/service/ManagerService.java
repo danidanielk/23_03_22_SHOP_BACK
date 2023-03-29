@@ -2,10 +2,8 @@ package com.kim.dani.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.kim.dani.dtoGet.BoardGetDto;
 import com.kim.dani.dtoGet.ProductPatchGetDto;
 import com.kim.dani.dtoGet.ProductUploadGetDto;
-import com.kim.dani.dtoSet.BoardSetDto;
 import com.kim.dani.dtoSet.CustomerListSetDto;
 import com.kim.dani.dtoSet.OrderListManagerSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
@@ -15,7 +13,6 @@ import com.kim.dani.repository.BoardRepository;
 import com.kim.dani.repository.BuyerRepository;
 import com.kim.dani.repository.CategoryRepository;
 import com.kim.dani.repository.ProductRepository;
-import com.querydsl.core.types.Order;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,9 +74,9 @@ public class ManagerService {
 
 
     //상품 업로드.
-    public ProductUploadSetDto productUpload(ProductUploadGetDto productUploadGetDto, MultipartFile file, HttpServletRequest req) throws IOException {
+    public ProductUploadSetDto productUpload(ProductUploadGetDto productUploadGetDto, MultipartFile file, HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
         Member member = queryFactory
                 .selectFrom(qMember)
                 .where(qMember.email.eq(getEmail))
@@ -108,11 +106,11 @@ public class ManagerService {
 
 
     //상품 삭제
-    public boolean delete(Long productId, HttpServletRequest req) {
+    public boolean delete(Long productId, HttpServletRequest req, HttpServletResponse res) {
 
 
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qMember)
@@ -133,7 +131,7 @@ public class ManagerService {
 
 
     //상품 수정
-    public boolean patch(Long productId, HttpServletRequest req, ProductPatchGetDto productPatchGetDto,MultipartFile file) throws IOException {
+    public boolean patch(Long productId, HttpServletRequest req, ProductPatchGetDto productPatchGetDto,MultipartFile file, HttpServletResponse res) throws IOException {
 
 
 
@@ -148,7 +146,7 @@ public class ManagerService {
         String name = productPatchGetDto.getProductName();
         Long quentity = productPatchGetDto.getProductQuentity();
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qMember)
@@ -186,9 +184,9 @@ public class ManagerService {
     }
 
     //모든 주문 내역
-    public List<OrderListManagerSetDto> orderList(HttpServletRequest req) {
+    public List<OrderListManagerSetDto> orderList(HttpServletRequest req, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         System.out.println(getEmail+"4444444444444444");
         List<Buyer> buyer = queryFactory

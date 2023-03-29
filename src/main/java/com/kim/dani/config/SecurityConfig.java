@@ -24,14 +24,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter  {
                 .authorizeRequests()
                 .antMatchers("/member/auth","product/add","manager/patch",
                         "manager/delete","member/buy","member/byecart","member/order").authenticated() // 이경로는 JWT 인증된 사용자만 접근가능
-//                .antMatchers("/signin").permitAll() // /a 경로는 인증없이 접근가능
                 .antMatchers().permitAll() // authenticated() 로 설정한 경로 외 모두 접근가능
-                .antMatchers("/master").hasRole("USER") // 이경로는 JWT + AuthenticationManagerBuilder 로 설정한 권한도있어야한다.
+                .antMatchers("/master").hasRole("USER") // 이경로는 JWT + AuthenticationManagerBuilder 로 설정한 권한도있어야한다. @PreAuthorize("hasRole('USER')")
                 .and()
-//                .formLogin()
-//                .loginPage("/member/login") //로그인 페이지 경로
-//                .permitAll()
-//                .and()
                 .logout()
                 .permitAll()
                 .and()

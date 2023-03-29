@@ -85,8 +85,8 @@ public class MemberService {
     }
 
     // 권한 체크후 Mypage에 MANAGER Page || CUSTOMER Page 생성
-    public AuthSetDto auth(HttpServletRequest req){
-        String email = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+    public AuthSetDto auth(HttpServletRequest req, HttpServletResponse res){
+        String email = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
         if (email ==null){
             return null;
         }
@@ -148,9 +148,9 @@ public class MemberService {
 
 
     //회원 myPage cart 선택 상품 삭제.
-    public boolean delete (Long cartProductId , HttpServletRequest req) {
+    public boolean delete (Long cartProductId , HttpServletRequest req, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -172,9 +172,9 @@ public class MemberService {
     }
 
     //장바구니에 담지않고 바로 주문
-    public BuySetDto buy(Long productId , HttpServletRequest req) {
+    public BuySetDto buy(Long productId , HttpServletRequest req, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -194,8 +194,8 @@ public class MemberService {
     }
 
     //장바구니에 담아서 주문
-    public BuySetDto cartBuy(Long cartProductId , HttpServletRequest req) {
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+    public BuySetDto cartBuy(Long cartProductId , HttpServletRequest req, HttpServletResponse res) {
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -248,9 +248,9 @@ public class MemberService {
 
 
     // 주문취소 (수량 반환)
-    public boolean cancel(HttpServletRequest req,Long orderId) {
+    public boolean cancel(HttpServletRequest req,Long orderId, HttpServletResponse res) {
 
-        String getEmail= jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail= jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -281,9 +281,9 @@ public class MemberService {
 
 
     //나의 주문 내역
-    public List<OrderListCustomerSetDto> orderList(HttpServletRequest request) {
+    public List<OrderListCustomerSetDto> orderList(HttpServletRequest request, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(request);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(request,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -307,9 +307,9 @@ public class MemberService {
 
 
     //회원정보 수정페이지 기본데이터
-    public ModifyDataSetDto modifyData(HttpServletRequest req) {
+    public ModifyDataSetDto modifyData(HttpServletRequest req, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -326,11 +326,11 @@ public class MemberService {
 
 
     //회원 비밀번호 수정
-    public boolean modifyInfo(ModifyDataGetDto modifyDataGetDto,HttpServletRequest req) {
+    public boolean modifyInfo(ModifyDataGetDto modifyDataGetDto,HttpServletRequest req, HttpServletResponse res) {
 
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
@@ -356,9 +356,9 @@ public class MemberService {
 
 
     //회원 삭제
-    public boolean modifyDelete(Long memberId,HttpServletRequest req,String password) {
+    public boolean modifyDelete(Long memberId,HttpServletRequest req,String password, HttpServletResponse res) {
 
-        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
 
         Member member = queryFactory
                 .selectFrom(qmember)
