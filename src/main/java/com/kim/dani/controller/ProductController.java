@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,9 +59,11 @@ public class ProductController {
     })
     @Operation(summary = "상품 디테일",description = "상품선택시 상품 디테일 화면")
     @PostMapping("productid/{productId}")
-    public ResponseEntity productDetail(@PathVariable Long productId){
+    public ResponseEntity productDetail(@PathVariable Long productId,HttpServletRequest req,HttpServletResponse res){
 
-        ProductDetailSetDto setDto = productService.productDetail(productId);
+
+
+        ProductDetailSetDto setDto = productService.productDetail(productId,req,res);
         if(setDto != null){
             return new ResponseEntity(setDto, HttpStatus.OK);
         }

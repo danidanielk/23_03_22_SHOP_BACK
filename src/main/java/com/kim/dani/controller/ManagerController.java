@@ -64,7 +64,7 @@ public class ManagerController {
     })
     @Operation(summary =  "상품삭제",description = "상품삭제")
     @DeleteMapping("/delete/{productid}")
-    @PreAuthorize("authenticated()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity delete(@PathVariable Long productid,HttpServletRequest req, HttpServletResponse res) {
         boolean answer = managerService.delete(productid, req,res);
         if (answer) {
@@ -81,7 +81,7 @@ public class ManagerController {
     })
     @Operation(summary = "상품수정",description = "상품수정")
     @PatchMapping("/patch/{productid}")
-    @PreAuthorize("authenticated()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity patch(@PathVariable Long productid,HttpServletRequest req,
                                 @Valid @RequestPart("formData") ProductPatchGetDto productPatchGetDto,
                                 @RequestParam(value = "productImage",required = false) MultipartFile file, HttpServletResponse res) throws IOException {

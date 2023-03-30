@@ -95,6 +95,8 @@ public class MemberService {
                 .where(qmember.email.eq(email))
                 .fetchOne();
 
+        String token = jwtTokenV2.newAccessToken(req, res);
+
         AuthSetDto authSetDto = new AuthSetDto(member1.getId(), member1.getAuth());
         return authSetDto;
     }

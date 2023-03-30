@@ -71,7 +71,7 @@ public class MemberController {
 
 
     //권한체크 Mypage에 MANAGER Page || CUSTOMER Page 생성
-    @PreAuthorize("authenticated()")
+
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "success", content = @Content(schema = @Schema(implementation = AuthSetDto.class))),
             @ApiResponse(responseCode = "404", description = "error code")
@@ -95,8 +95,8 @@ public class MemberController {
             , @ApiResponse(responseCode = "404", description = "error code")
     })
     @Operation(summary = "상품 리스트", description = "회원-장바구니 / 메니져-상품목록,수정,업로드")
-    @PreAuthorize("authenticated()")
     @PostMapping("/mypage/{memberId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity myPage(@PathVariable Long memberId, HttpServletRequest req) {
         List<MyPageSetDto> myPageSetDtos = memberService.myPage(memberId, req);
         if (myPageSetDtos != null) {
@@ -127,7 +127,6 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "error code")
     })
     @Operation(summary = "주문서에 정보 자동입력", description = "상품리스트에서 구매시")
-    @PreAuthorize("authenticated()")
     @GetMapping("/buy/{productId}")
     public ResponseEntity buy(@PathVariable Long productId, HttpServletRequest req, HttpServletResponse res) {
         BuySetDto setDto = memberService.buy(productId, req, res);
@@ -145,7 +144,6 @@ public class MemberController {
             @ApiResponse(responseCode = "404", description = "error code")
     })
     @Operation(summary = "주문서에 정보 자동입력", description = "장바구니에서 구매시")
-    @PreAuthorize("authenticated()")
     @GetMapping("/buycart/{cartProductId}")
     public ResponseEntity cartBuy(@PathVariable Long cartProductId, HttpServletRequest req, HttpServletResponse res) {
         BuySetDto setDto = memberService.cartBuy(cartProductId, req, res);
@@ -163,7 +161,6 @@ public class MemberController {
             @ApiResponse(responseCode = "400", description = "error code")
     })
     @Operation(summary = "주문내역 DB저장")
-    @PreAuthorize("authenticated()")
     @PostMapping("/order")
     public ResponseEntity order(@Valid @RequestBody OrderGetDto orderGetDto, HttpServletRequest req, HttpServletResponse res) {
 //        System.out.println(orderGetDto.getEmail());

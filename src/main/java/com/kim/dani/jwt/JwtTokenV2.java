@@ -4,12 +4,18 @@ package com.kim.dani.jwt;
 import com.kim.dani.dtoSet.TokenSetDto;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class JwtTokenV2 {
@@ -24,7 +30,7 @@ public class JwtTokenV2 {
     private String createToken(String email, boolean isRefreshToken){
         Claims claims = Jwts.claims();
         claims.put("email", email);
-        String tokenName = isRefreshToken ? "refreshTK" : "accessTK";
+        String tokenName = isRefreshToken ? refreshTK : accessTK;
         long expireationTime  = isRefreshToken ? 1*24*60*60*1000L : 60*10*1000L; //1일 or 10분
         return Jwts.builder()
                 .setClaims(claims)
@@ -38,12 +44,12 @@ public class JwtTokenV2 {
         String accessToken = createToken(email, false);
         String refreshToken = createToken(email, true);
 
-        Cookie accessCookie = new Cookie("accessTK", accessToken);
+        Cookie accessCookie = new Cookie(accessTK, accessToken);
         accessCookie.setMaxAge(60*10); //10분
         accessCookie.setHttpOnly(true);
         accessCookie.setPath("/");
 
-        Cookie refreshCookie = new Cookie("refreshTK", refreshToken);
+        Cookie refreshCookie = new Cookie(refreshTK, refreshToken);
         refreshCookie.setMaxAge(1*24*60*60); //1일
         refreshCookie.setHttpOnly(true);
         refreshCookie.setPath("/");
@@ -54,37 +60,48 @@ public class JwtTokenV2 {
         return tokenSetDto;
     }
 
-
-    public boolean tokenValidator(HttpServletRequest req) {
+    public String getToken(HttpServletRequest req){
         Cookie[] cookies = req.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies){
-                if (cookie.getName().equals(accessTK)) {
-                    String token = cookie.getValue();
-                    try {
-                        Jwts.parser()
-                                .setSigningKey(secretKey.getBytes())
-                                .parseClaimsJws(token);
-                        return true;
-                    } catch (JwtException e) {
-                        return false;
-                    }
-                } else if (cookie.getName().equals(refreshTK)) {
-                    String token = cookie.getValue();
-                    try {
-                        Jwts.parser()
-                                .setSigningKey(secretKey.getBytes())
-                                .parseClaimsJws(token);
-                        return true;
-                    } catch (JwtException e) {
-                        return false;
-                    }
-
-                }
-
+        String token = null;
+        if (cookies !=null) {
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals(accessTK)) {
+                token = cookie.getValue();
             }
         }
-        return false;
+        return token;
+        }
+        return null;
+    }
+
+
+    public Authentication getAuthentication(String token) {
+        UserDetails userDetails = User.builder()
+                .username(getUsername(token))
+                .password("")
+                .roles(getRoles(token).toArray(new String[0]))
+                .build();
+
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+
+    private String getUsername(String token) {
+        return Jwts.parser().setSigningKey(secretKey.getBytes()).parseClaimsJws(token).getBody().get("email",String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getRoles(String token) {
+
+        // JWT 토큰에서 claim 정보 파싱
+        Claims claims = Jwts.parser().setSigningKey(secretKey.getBytes()).parseClaimsJws(token).getBody();
+        String email = claims.get("email", String.class);
+
+        // email이 master@master인 경우 MASTER 권한 부여
+        if ("master@master".equals(email)) {
+            return Collections.singletonList("MASTER");
+        }
+        // email이 master@master가 아닌 경우 권한 없음
+        return Collections.emptyList();
     }
 
 
@@ -97,7 +114,6 @@ public class JwtTokenV2 {
                 break;
             }
         }
-
         if (accessToken != null) {
             try {
                 Claims claims = Jwts.parser()
@@ -110,35 +126,46 @@ public class JwtTokenV2 {
                 }
             } catch (ExpiredJwtException e) {
                 // Access 토큰이 만료된 경우
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals(refreshTK)) {
-                        String refreshToken = cookie.getValue();
-                        try {
-                            Claims claims = Jwts.parser()
-                                    .setSigningKey(secretKey.getBytes())
-                                    .parseClaimsJws(refreshToken)
-                                    .getBody();
-                            if (claims != null) {
-                                String email = (String) claims.get("email");
-                                // 새로운 access 토큰 발급
-                                String newAccessToken = createToken(email, false);
-                                Cookie newAccessCookie = new Cookie(accessTK, newAccessToken);
-                                newAccessCookie.setMaxAge(60 * 10); // 10분
-                                newAccessCookie.setHttpOnly(true);
-                                newAccessCookie.setPath("/");
-                                res.addCookie(newAccessCookie);
-                                return email;
-                            }
-                        } catch (ExpiredJwtException ex) {
-                            // Refresh 토큰도 만료된 경우
-                            return null;
-                        }
-                    }
-                }
+//                newAccessToken(req, res);
             }
         }
         return null;
     }
 
 
+
+    public String newAccessToken(HttpServletRequest req,HttpServletResponse res) {
+        Cookie[] cookies = req.getCookies();
+        String refreshToken =null;
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals(refreshTK)) {
+                refreshToken = cookie.getValue();
+                break;
+            }
+            if (refreshToken!=null) {
+                try {
+                    Claims claims = Jwts.parser()
+                            .setSigningKey(secretKey.getBytes())
+                            .parseClaimsJws(refreshToken)
+                            .getBody();
+                    if (claims != null) {
+                        String email = (String) claims.get("email");
+                        // 새로운 access 토큰 발급
+                        String newAccessToken = createToken(email, false);
+                        Cookie newAccessCookie = new Cookie(accessTK, newAccessToken);
+                        newAccessCookie.setMaxAge(60 * 10); // 10분
+                        newAccessCookie.setHttpOnly(true);
+                        newAccessCookie.setPath("/");
+                        res.addCookie(newAccessCookie);
+
+                        return newAccessToken;
+                    }
+                } catch (ExpiredJwtException ex) {
+                    // Refresh 토큰도 만료된 경우
+                    return null;
+                }
+            }
+            }
+            return null;
+    }
 }

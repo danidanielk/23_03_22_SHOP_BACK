@@ -61,7 +61,10 @@ public class ProductService {
 
 
     //상품 디테일
-    public ProductDetailSetDto productDetail(Long productId){
+    public ProductDetailSetDto productDetail(Long productId,HttpServletRequest req,HttpServletResponse res){
+
+        String token = jwtTokenV2.getToken(req);
+        System.out.println("33333333333333333333333333333"+token);
         Product product = queryFactory
                 .selectFrom(qProduct)
                 .where(qProduct.id.eq(productId))
