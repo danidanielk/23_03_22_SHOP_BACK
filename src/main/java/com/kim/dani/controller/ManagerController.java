@@ -6,6 +6,7 @@ import com.kim.dani.dtoGet.ProductUploadGetDto;
 import com.kim.dani.dtoSet.CustomerListSetDto;
 import com.kim.dani.dtoSet.OrderListManagerSetDto;
 import com.kim.dani.dtoSet.ProductUploadSetDto;
+import com.kim.dani.jwt.JwtTokenV2;
 import com.kim.dani.service.ManagerService;
 import com.kim.dani.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +37,7 @@ public class ManagerController {
 
     private final ProductService productService;
     private final ManagerService managerService;
+    private final JwtTokenV2 jwtTokenV2;
 
 
     //상품 등록
@@ -128,5 +130,9 @@ public class ManagerController {
 
 
 
+    @GetMapping("/gettoken")
+    public String newToken(HttpServletRequest req, HttpServletResponse res) {
+        return jwtTokenV2.newAccessToken(req, res);
+    }
 
 }

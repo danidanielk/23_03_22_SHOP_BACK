@@ -93,7 +93,7 @@ public class ManagerService {
                 productUploadGetDto.getProductPrice(),
                 productUploadGetDto.getProductContent(),
                 productUploadGetDto.getProductQuantity(),
-                category,member );
+                category,member,null,null );
         productRepository.save(product);
 
 

@@ -2,7 +2,12 @@ package com.kim.dani.jwt;
 
 
 import com.kim.dani.dtoSet.TokenSetDto;
+import com.kim.dani.entity.Auth;
+import com.kim.dani.entity.Member;
+import com.kim.dani.entity.QMember;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.jsonwebtoken.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,9 +23,14 @@ import java.util.Date;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class JwtTokenV2 {
 
+    private final JPAQueryFactory queryFactory;
+    private final QMember qmember = QMember.member;
+
     private String accessTK = "accessTK";
+
     private String refreshTK = "refreshTK";
 
 
@@ -60,19 +70,16 @@ public class JwtTokenV2 {
         return tokenSetDto;
     }
 
+
+
     public String getToken(HttpServletRequest req){
-        Cookie[] cookies = req.getCookies();
-        String token = null;
-        if (cookies !=null) {
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(accessTK)) {
-                token = cookie.getValue();
-            }
-        }
-        return token;
+        String token = req.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            return token.substring(7);
         }
         return null;
     }
+
 
 
     public Authentication getAuthentication(String token) {
@@ -85,47 +92,44 @@ public class JwtTokenV2 {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
+
+
     private String getUsername(String token) {
         return Jwts.parser().setSigningKey(secretKey.getBytes()).parseClaimsJws(token).getBody().get("email",String.class);
     }
 
+
+
     @SuppressWarnings("unchecked")
     private List<String> getRoles(String token) {
 
-        // JWT 토큰에서 claim 정보 파싱
         Claims claims = Jwts.parser().setSigningKey(secretKey.getBytes()).parseClaimsJws(token).getBody();
         String email = claims.get("email", String.class);
-
-        // email이 master@master인 경우 MASTER 권한 부여
-        if ("master@master".equals(email)) {
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(email))
+                .fetchOne();
+        // MASTER,CUSTOMER 권한 부여
+        if (member.getAuth().equals(Auth.MANAGER)) {
+            System.out.println("나는 마스터입니당--------------------------");
             return Collections.singletonList("MASTER");
+        } else if (member.getAuth().equals(Auth.CUSTOMER)) {
+            System.out.println("나는 회원입니당----------------------------");
+            return Collections.singletonList("CUSTOMER");
         }
-        // email이 master@master가 아닌 경우 권한 없음
         return Collections.emptyList();
     }
 
 
+
     public String tokenValidatiorAndGetEmail(HttpServletRequest req,HttpServletResponse res ) {
-        Cookie[] cookies = req.getCookies();
-        String accessToken = null;
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(accessTK)) {
-                accessToken = cookie.getValue();
-                break;
-            }
-        }
-        if (accessToken != null) {
+        String token = getToken(req);
+        if (token != null) {
             try {
-                Claims claims = Jwts.parser()
-                        .setSigningKey(secretKey.getBytes())
-                        .parseClaimsJws(accessToken)
-                        .getBody();
-                if (claims != null) {
-                    String email = (String) claims.get("email");
-                    return email;
-                }
+                String email = getUsername(token);
+                return email;
             } catch (ExpiredJwtException e) {
-                // Access 토큰이 만료된 경우
+//                 Access 토큰이 만료된 경우
 //                newAccessToken(req, res);
             }
         }
@@ -142,14 +146,10 @@ public class JwtTokenV2 {
                 refreshToken = cookie.getValue();
                 break;
             }
+        }
             if (refreshToken!=null) {
                 try {
-                    Claims claims = Jwts.parser()
-                            .setSigningKey(secretKey.getBytes())
-                            .parseClaimsJws(refreshToken)
-                            .getBody();
-                    if (claims != null) {
-                        String email = (String) claims.get("email");
+                    String email = getUsername(refreshToken);
                         // 새로운 access 토큰 발급
                         String newAccessToken = createToken(email, false);
                         Cookie newAccessCookie = new Cookie(accessTK, newAccessToken);
@@ -159,12 +159,11 @@ public class JwtTokenV2 {
                         res.addCookie(newAccessCookie);
 
                         return newAccessToken;
-                    }
+
                 } catch (ExpiredJwtException ex) {
                     // Refresh 토큰도 만료된 경우
                     return null;
                 }
-            }
             }
             return null;
     }

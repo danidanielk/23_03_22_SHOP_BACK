@@ -41,5 +41,9 @@ public class Product {
     @ManyToOne
     private Member member;
 
+    @OneToMany(mappedBy = "product", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<RecentlyProduct> recentlyProducts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bookmark> bookmarks = new ArrayList<>();
 }

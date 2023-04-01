@@ -28,6 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
             String jwt = jwtTokenV2.getToken(request);
+            //요청시에 인증없이 그냥 넘기기
             if (jwt == null) {
                 filterChain.doFilter(request, response);
                 return;

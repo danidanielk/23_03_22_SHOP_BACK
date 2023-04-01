@@ -1,9 +1,11 @@
 package com.kim.dani.controller;
 
 
+import com.kim.dani.dtoGet.ProductIdGetDto;
 import com.kim.dani.dtoSet.ProductDetailSetDto;
 import com.kim.dani.dtoSet.ProductListAllSetDto;
 import com.kim.dani.dtoSet.ProductListSetDto;
+import com.kim.dani.dtoSet.RecentlyAndBookmarkSetDto;
 import com.kim.dani.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -52,23 +54,27 @@ public class ProductController {
     }
 
 
+
+
     //카테고리안의 상품 선택 시 상품 디테일 화면
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "success",content = @Content(schema = @Schema(implementation = ProductDetailSetDto.class))),
             @ApiResponse(responseCode = "404",description = "error code")
     })
     @Operation(summary = "상품 디테일",description = "상품선택시 상품 디테일 화면")
-    @PostMapping("productid/{productId}")
-    public ResponseEntity productDetail(@PathVariable Long productId,HttpServletRequest req,HttpServletResponse res){
+    @PostMapping("productid")
+    public ResponseEntity productDetail(@RequestBody ProductIdGetDto productId, HttpServletRequest req, HttpServletResponse res){
 
 
 
-        ProductDetailSetDto setDto = productService.productDetail(productId,req,res);
+        ProductDetailSetDto setDto = productService.productDetail(productId.getProductId(),req,res);
         if(setDto != null){
             return new ResponseEntity(setDto, HttpStatus.OK);
         }
         return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
+
+
 
     //상품 Mypage에 추가 버튼
     @ApiResponses(value = {
@@ -85,6 +91,8 @@ public class ProductController {
         return new ResponseEntity(HttpStatus.OK);
         //commit
     }
+
+
 
     //전체 상품 list page
     @ApiResponses(value = {
@@ -103,5 +111,43 @@ public class ProductController {
 
 
 
+
+    //상품 즐겨찾기에 추가
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",description = "success"),
+            @ApiResponse(responseCode = "400",description = "error code")
+    })
+    @Operation(summary = "즐겨찾기",description = "즐겨찾기에 추가")
+    @PostMapping("/bookmark")
+    public ResponseEntity getBookmark (@RequestBody ProductIdGetDto productId,HttpServletRequest req,HttpServletResponse res) {
+        boolean answer = productService.getBookmark(productId.getProductId(), req, res);
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.BAD_REQUEST);
+    }
+
+
+
+
+
+    //즐겨찾기 목록 , 최근상품 리스트
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",description = "success",content = @Content(schema = @Schema(implementation = RecentlyAndBookmarkSetDto.class))),
+            @ApiResponse(responseCode = "404", description = "error")
+    })
+    @Operation(summary = "즐겨찾기목록 , 최근본상품" ,description = "최근본 상품 = 5개")
+    @GetMapping("/myproduct")
+    public ResponseEntity myProduct(HttpServletRequest req, HttpServletResponse res) {
+
+        RecentlyAndBookmarkSetDto recentlyAndBookmarkSetDto = productService.myProduct(req, res);
+
+        if (recentlyAndBookmarkSetDto != null) {
+            return new ResponseEntity(recentlyAndBookmarkSetDto, HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
+
+    }
 
 }

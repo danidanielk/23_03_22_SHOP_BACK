@@ -1,8 +1,6 @@
 package com.kim.dani.service;
 
-import com.kim.dani.dtoSet.ProductDetailSetDto;
-import com.kim.dani.dtoSet.ProductListAllSetDto;
-import com.kim.dani.dtoSet.ProductListSetDto;
+import com.kim.dani.dtoSet.*;
 import com.kim.dani.entity.*;
 import com.kim.dani.jwt.JwtTokenV2;
 import com.kim.dani.repository.*;
@@ -26,7 +24,11 @@ public class ProductService {
     private final CartRepository cartRepository;
     private final CartAndProductRepository cartAndProductRepository;
     private final CartProductRepository cartProductRepository;
+    private final RecentlyProductRepository recentlyProductRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final JPAQueryFactory queryFactory;
+    private final QRecentlyProduct qRecentlyProduct = QRecentlyProduct.recentlyProduct;
+    private final QBookmark qBookmark = QBookmark.bookmark;
     private final QProduct qProduct = QProduct.product;
     private final QMember qMember = QMember.member;
     private final QCart qCart = QCart.cart;
@@ -63,16 +65,35 @@ public class ProductService {
     //상품 디테일
     public ProductDetailSetDto productDetail(Long productId,HttpServletRequest req,HttpServletResponse res){
 
-        String token = jwtTokenV2.getToken(req);
-        System.out.println("33333333333333333333333333333"+token);
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req, res);
+
+        Member member = queryFactory
+                .selectFrom(qMember)
+                .where(qMember.email.eq(getEmail))
+                .fetchOne();
+
+
         Product product = queryFactory
                 .selectFrom(qProduct)
                 .where(qProduct.id.eq(productId))
                 .fetchOne();
+
+
+        //최근본상품 DB에 저장
+        RecentlyProduct recentlyProduct = new RecentlyProduct();
+        recentlyProduct.setMember(member);
+        recentlyProduct.setProduct(product);
+        recentlyProductRepository.save(recentlyProduct);
+
+
+
         return new ProductDetailSetDto(product.getId(), product.getProductName(),
                 product.getProductImage(), product.getProductPrice(),
                 product.getProductContent(), product.getProductQuantity(),
                 product.getCategory().getProductCategory());
+
+
+
 
     }
 
@@ -146,6 +167,79 @@ public class ProductService {
             productListAllSetDtos.add(productListAllSetDto);
         }
         return productListAllSetDtos;
+    }
+
+
+    //즐겨찾기에 추가
+    public boolean getBookmark(Long productId,HttpServletRequest req, HttpServletResponse res) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
+
+        if (getEmail != null) {
+
+        Product product  = queryFactory
+                .selectFrom(qProduct)
+                .where(qProduct.id.eq(productId))
+                .fetchOne();
+
+        Member member = queryFactory
+                .selectFrom(qMember)
+                .where(qMember.email.eq(getEmail))
+                .fetchOne();
+
+        Bookmark bookmark = new Bookmark();
+        bookmark.setMember(member);
+        bookmark.setProduct(product);
+        bookmarkRepository.save(bookmark);
+            return true;
+        }
+        return false;
+    }
+
+
+    //즐겨찾기, 최근본상품 목록
+    public RecentlyAndBookmarkSetDto myProduct(HttpServletRequest req, HttpServletResponse res) {
+
+        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req, res);
+
+        List<RecentlyProduct> recentlyProducts = queryFactory
+                .selectFrom(qRecentlyProduct)
+                .where(qRecentlyProduct.member.email.eq(getEmail))
+                .orderBy(qRecentlyProduct.id.desc())
+                .fetch();
+
+        List<Bookmark> bookmark = queryFactory
+                .selectFrom(qBookmark)
+                .where(qBookmark.member.email.eq(getEmail))
+                .fetch();
+
+        RecentlyAndBookmarkSetDto recentlyAndBookmarkSetDto = new RecentlyAndBookmarkSetDto();
+
+        int size = recentlyAndBookmarkSetDto.getRecentlySets().length;
+
+        RecentlySet rs[] = recentlyAndBookmarkSetDto.getRecentlySets();
+        for (int i = 0; i < size-1; i++) {
+            RecentlySet recentlySet = new RecentlySet(
+                    recentlyProducts.get(i).getMember().getId(),
+                    recentlyProducts.get(i).getProduct().getId(),
+                    recentlyProducts.get(i).getProduct().getProductImage(),
+                    recentlyProducts.get(i).getProduct().getProductName(),
+                    recentlyProducts.get(i).getProduct().getProductPrice());
+            rs[i] = recentlySet;
+        }
+
+        List<BookmarkSet> bs = recentlyAndBookmarkSetDto.getBookmarkSets();
+        for (Bookmark bookmark1 : bookmark) {
+            BookmarkSet bookmarkSet = new BookmarkSet(
+                    bookmark1.getMember().getId(),bookmark1.getProduct().getId(),bookmark1.getProduct().getProductImage(),
+                    bookmark1.getProduct().getProductName(),bookmark1.getProduct().getProductPrice());
+            bs.add(bookmarkSet);
+        }
+
+
+        return recentlyAndBookmarkSetDto;
+
+
     }
 
 

@@ -30,9 +30,9 @@ public class MyPageSetDto {
 
     private Long thisQuantity;
 
-
-
     private String category;
+
+
 
 
 }

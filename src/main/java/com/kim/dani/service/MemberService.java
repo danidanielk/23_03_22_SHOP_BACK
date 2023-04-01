@@ -43,7 +43,7 @@ public class MemberService {
         String encoderPassword = passwordEncoder.encode(pw);
         if(memberSigninGetDto.getEmail().equals("master@master")){
         Member member1 = new Member(null, null,memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
-                encoderPassword, Auth.MANAGER,null,null,null,null,null);
+                encoderPassword, Auth.MANAGER,null,null,null,null,null,null,null);
             try {
             memberRepository.save(member1);
             return true;
@@ -52,7 +52,7 @@ public class MemberService {
             }
         }
         Member member1 = new Member(null, null,memberSigninGetDto.getEmail(), memberSigninGetDto.getPhone(),
-                encoderPassword, Auth.CUSTOMER,null,null,null,null,null);
+                encoderPassword, Auth.CUSTOMER,null,null,null,null,null,null,null);
         try {
             memberRepository.save(member1);
             return true;
@@ -95,7 +95,7 @@ public class MemberService {
                 .where(qmember.email.eq(email))
                 .fetchOne();
 
-        String token = jwtTokenV2.newAccessToken(req, res);
+//        String token = jwtTokenV2.newAccessToken(req, res);
 
         AuthSetDto authSetDto = new AuthSetDto(member1.getId(), member1.getAuth());
         return authSetDto;
