@@ -17,7 +17,9 @@ import java.util.List;
 @AllArgsConstructor
 public class RecentlyAndBookmarkSetDto {
 
-    private RecentlySet[] recentlySets = new RecentlySet[5];
+//    private RecentlySet[] recentlySets = new RecentlySet[5];
+
+    private List<RecentlySet> recentlySets = new ArrayList<>();
 
     private List<BookmarkSet> bookmarkSets = new ArrayList<>();
 

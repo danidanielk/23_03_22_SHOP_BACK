@@ -13,6 +13,8 @@ import lombok.Setter;
 public class BookmarkSet {
 
 
+    private Long bookmarkId;
+
     private Long memberId;
 
     private Long productId;

@@ -82,12 +82,19 @@ public class ManagerController {
             @ApiResponse(responseCode = "404",description = "error")
     })
     @Operation(summary = "상품수정",description = "상품수정")
-    @PatchMapping("/patch/{productid}")
+    @PatchMapping("/patch")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity patch(@PathVariable Long productid,HttpServletRequest req,
+    public ResponseEntity patch(HttpServletRequest req,
                                 @Valid @RequestPart("formData") ProductPatchGetDto productPatchGetDto,
-                                @RequestParam(value = "productImage",required = false) MultipartFile file, HttpServletResponse res) throws IOException {
-        boolean answer = managerService.patch(productid, req,productPatchGetDto,file,res);
+                                @RequestParam(value = "productImage",required = false) MultipartFile file,
+                                @RequestParam("productId")Long productId, HttpServletResponse res) throws IOException {
+
+//        String getEmail = jwtTokenV2.tokenValidatiorAndGetEmail(req,res);
+//        String getToken = jwtTokenV2.getToken(req);
+//        Long id = productId;
+//        System.out.println(getToken+"-------------------------------------------------------------------------"+productId );
+//        System.out.println(getEmail+"3455345345304530498572039485720394857203984572304985723049857sduiofhsedkfjgh");
+        boolean answer = managerService.patch(productId, req,productPatchGetDto,file,res);
         if (answer) {
             return new ResponseEntity(HttpStatus.OK);
         }

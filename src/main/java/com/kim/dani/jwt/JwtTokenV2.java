@@ -56,12 +56,12 @@ public class JwtTokenV2 {
 
         Cookie accessCookie = new Cookie(accessTK, accessToken);
         accessCookie.setMaxAge(60*10); //10분
-        accessCookie.setHttpOnly(true);
+//        accessCookie.setHttpOnly(true);
         accessCookie.setPath("/");
 
         Cookie refreshCookie = new Cookie(refreshTK, refreshToken);
         refreshCookie.setMaxAge(1*24*60*60); //1일
-        refreshCookie.setHttpOnly(true);
+//        refreshCookie.setHttpOnly(true);
         refreshCookie.setPath("/");
 
         res.addCookie(accessCookie);
@@ -154,7 +154,7 @@ public class JwtTokenV2 {
                         String newAccessToken = createToken(email, false);
                         Cookie newAccessCookie = new Cookie(accessTK, newAccessToken);
                         newAccessCookie.setMaxAge(60 * 10); // 10분
-                        newAccessCookie.setHttpOnly(true);
+//                        newAccessCookie.setHttpOnly(true);
                         newAccessCookie.setPath("/");
                         res.addCookie(newAccessCookie);
 

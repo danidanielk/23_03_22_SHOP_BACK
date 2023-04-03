@@ -215,22 +215,25 @@ public class ProductService {
 
         RecentlyAndBookmarkSetDto recentlyAndBookmarkSetDto = new RecentlyAndBookmarkSetDto();
 
-        int size = recentlyAndBookmarkSetDto.getRecentlySets().length;
 
-        RecentlySet rs[] = recentlyAndBookmarkSetDto.getRecentlySets();
-        for (int i = 0; i < size-1; i++) {
-            RecentlySet recentlySet = new RecentlySet(
-                    recentlyProducts.get(i).getMember().getId(),
-                    recentlyProducts.get(i).getProduct().getId(),
-                    recentlyProducts.get(i).getProduct().getProductImage(),
-                    recentlyProducts.get(i).getProduct().getProductName(),
-                    recentlyProducts.get(i).getProduct().getProductPrice());
-            rs[i] = recentlySet;
+        List<RecentlySet> rs = recentlyAndBookmarkSetDto.getRecentlySets();
+        for (int i = 0; i < Math.min(recentlyProducts.size(),5); i++) {
+            if (recentlyProducts.get(i) != null) {
+            RecentlySet recentlySet = new RecentlySet();
+            recentlySet.setProductId(recentlyProducts.get(i).getProduct().getId());
+            recentlySet.setProductName(recentlyProducts.get(i).getProduct().getProductName());
+            recentlySet.setProductPrice(recentlyProducts.get(i).getProduct().getProductPrice());
+            recentlySet.setProdcutImage(recentlyProducts.get(i).getProduct().getProductImage());
+                rs.add(recentlySet);
+            }else {
+                break;
+            }
         }
+
 
         List<BookmarkSet> bs = recentlyAndBookmarkSetDto.getBookmarkSets();
         for (Bookmark bookmark1 : bookmark) {
-            BookmarkSet bookmarkSet = new BookmarkSet(
+            BookmarkSet bookmarkSet = new BookmarkSet(bookmark1.getId(),
                     bookmark1.getMember().getId(),bookmark1.getProduct().getId(),bookmark1.getProduct().getProductImage(),
                     bookmark1.getProduct().getProductName(),bookmark1.getProduct().getProductPrice());
             bs.add(bookmarkSet);

@@ -244,7 +244,7 @@ public class MemberController {
         return new ResponseEntity(HttpStatus.BAD_REQUEST);
     }
 
-    //회원 삭제
+    //회원탈퇴
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "success"),
             @ApiResponse(responseCode = "400", description = "error code")
@@ -260,6 +260,22 @@ public class MemberController {
             return new ResponseEntity(HttpStatus.OK);
         }
         return new ResponseEntity(HttpStatus.BAD_REQUEST);
+    }
+
+    //즐겨찾기 상품 제거
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",description = "success"),
+            @ApiResponse(responseCode = "404",description = "error")
+    })
+    @Operation(summary = "즐겨찾기 제거")
+    @PostMapping("/bookmark/delete")
+    public ResponseEntity bookmarkDelete(@RequestParam("bookmarkId") Long bookmarkId,HttpServletRequest req, HttpServletResponse res) {
+        System.out.println("44444444444444444444444444444"+bookmarkId);
+        boolean answer = memberService.bookmarkDelete(bookmarkId, req, res);
+        if (answer) {
+            return new ResponseEntity(HttpStatus.OK);
+        }
+        return new ResponseEntity(HttpStatus.NOT_FOUND);
     }
 
 }

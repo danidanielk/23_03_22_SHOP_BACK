@@ -26,6 +26,7 @@ public class MemberService {
     private final ProductRepository productRepository;
     private final CartAndProductRepository cartAndProductRepository;
     private final BoardRepository boardRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final QMember qmember = QMember.member;
     private final QCart qCart = QCart.cart;
     private final QCartAndProduct qCartAndProduct = QCartAndProduct.cartAndProduct;
@@ -33,6 +34,7 @@ public class MemberService {
     private final QCartProduct qCartProduct = QCartProduct.cartProduct;
     private final QBuyer qBuyer = QBuyer.buyer;
     private final QBoard qBoard = QBoard.board;
+    private final QBookmark qBookmark = QBookmark.bookmark;
     private final JwtTokenV2 jwtTokenV2;
 
 
@@ -372,6 +374,29 @@ public class MemberService {
 
         if (member.getId() == memberId && pw) {
             memberRepository.delete(member);
+            return true;
+        }
+        return false;
+    }
+
+    //즐겨찾기 상품 제거
+    public boolean bookmarkDelete(Long bookmarkId, HttpServletRequest req, HttpServletResponse res) {
+
+        String email = jwtTokenV2.tokenValidatiorAndGetEmail(req, res);
+
+        if (email != null) {
+        Member member = queryFactory
+                .selectFrom(qmember)
+                .where(qmember.email.eq(email))
+                .fetchOne();
+
+        Bookmark bookmark = queryFactory
+                .selectFrom(qBookmark)
+                .where(qBookmark.member.eq(member))
+                .where(qBookmark.id.eq(bookmarkId))
+                .fetchOne();
+
+        bookmarkRepository.delete(bookmark);
             return true;
         }
         return false;
